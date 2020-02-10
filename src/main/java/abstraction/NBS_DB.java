@@ -1,10 +1,10 @@
 package abstraction;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import com.google.common.collect.Lists;
+import hashing.HashUtils;
 
 public class NBS_DB {
 
@@ -16,33 +16,38 @@ public class NBS_DB {
 
         conn = DriverManager.getConnection(connectionUrl);
     }
-    public List<Map<String, Object>> getDatabaseAsMap() throws SQLException {
 
-        // TODO might want to convert this to an array later on... fine for now though
-        List ll = new LinkedList<Map<String, Object>>();
+    public Map<Long, Long> constructAuxTable(final Set<MatchFieldEnum> attrs) throws SQLException {
+
+        Set<String> requiredColumns = new HashSet<String>();
+        for (MatchFieldEnum mfield : attrs) {
+            requiredColumns.addAll(MatchFieldUtils.getRequiredColumns(mfield));
+        }
+        requiredColumns.add(Constants.COL_PERSON_UID);
 
         Statement query = conn.createStatement();
-        ResultSet rs = query.executeQuery("SELECT * from Person");
-        ResultSetMetaData rsMeta = rs.getMetaData();
+        ResultSet rs = query.executeQuery(
+                "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
+                        " from Person"
+        );
 
-        int num_columns = rsMeta.getColumnCount();
+        HashMap<Long, Long> auxTable = new HashMap<Long, Long>();
 
         // TODO This methodology is sourced from https://stackoverflow.com/questions/7507121/efficient-way-to-handle-resultset-in-java
         // But should be abstracted using a standard library like DBUtils or MapListHandler
         while (rs.next()) {
-            HashMap row = new HashMap<String, Object>(num_columns);
+            HashMap attr_map = new HashMap<MatchFieldEnum, Object>();
 
-            for (int c = 1; c <= num_columns; c++) {
-                row.put(rsMeta.getColumnName(c), rs.getObject(c));
+            for (MatchFieldEnum mfield : attrs) {
+                attr_map.put(mfield, MatchFieldUtils.getFieldValue(rs, mfield));
             }
-            ll.add(row);
+
+            auxTable.put(
+                    (long) MatchFieldUtils.getFieldValue(rs, MatchFieldEnum.UID),
+                    HashUtils.hashFields(attr_map)
+            );
         }
 
-        return ll;
+        return auxTable;
     }
-//    public Object get_id_attr(DatabaseRecord id, RecordFields field) {
-//        // TODO Implement
-//        // Get database[id][field]
-//        return null;
-//    }
 }

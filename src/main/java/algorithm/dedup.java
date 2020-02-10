@@ -1,14 +1,6 @@
 package algorithm;
 
 import abstraction.AuxDatabase;
-import abstraction.NBS_DB;
-import abstraction.DatabaseRecord;
-import abstraction.RecordFields;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

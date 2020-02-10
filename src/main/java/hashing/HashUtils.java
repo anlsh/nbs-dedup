@@ -1,9 +1,9 @@
 package hashing;
 
+import abstraction.MatchFieldEnum;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
 
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -75,4 +75,10 @@ public class HashUtils {
     }
 
      */
+    public static long hashFields(Map<MatchFieldEnum, Object> record) {
+        // TODO Implement!
+        // TODO Raise an error if Person_UID is ever part of the hash since that would be a subtle and
+        // soul-crushing bug.
+        throw new UnsupportedOperationException("Hashing of record field subsets is not supported yet!");
+    }
 }
