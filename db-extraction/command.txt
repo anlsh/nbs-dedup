@@ -1,0 +1,22 @@
+RESTORE DATABASE ODS_PRIMARY_DATA01
+FROM DISK = '/var/opt/mssql/backup/NBS_ODSE_20190530.bak'
+WITH MOVE 'ODS_PRIMARY_DATA01' TO '/var/opt/mssql/data/ODS_PRIMARY_DATA01.mdf',
+MOVE 'ODS_PRIMARY_DAT02' TO '/var/opt/mssql/data/ODS_PRIMARY_DAT02.mdf',
+MOVE 'ODS_ACTS01' TO '/var/opt/mssql/data/ODS_ACTS01.mdf',
+MOVE 'ODS_ACTS02' TO '/var/opt/mssql/data/ODS_ACTS02.mdf',
+MOVE 'ODS_ENTITIES01' TO '/var/opt/mssql/data/ODS_ENTITIES01.mdf',
+MOVE 'ODS_ENTITIES02' TO '/var/opt/mssql/data/ODS_ENTITIES02.mdf',
+MOVE 'ODS_ENTITIES_LOCATOR01' TO '/var/opt/mssql/data/ODS_ENTITIES_LOCATOR01.mdf',
+MOVE 'ODS_ENTITIES_LOCATOR02' TO '/var/opt/mssql/data/ODS_ENTITIES_LOCATOR02.mdf',
+MOVE 'ODS_HIST01' TO '/var/opt/mssql/data/ODS_HIST01.mdf',
+MOVE 'ODS_HIST02' TO '/var/opt/mssql/data/ODS_HIST02.mdf',
+MOVE 'ODS_INDEX01' TO '/var/opt/mssql/data/ODS_INDEX01.mdf',
+MOVE 'ODS_INDEX02' TO '/var/opt/mssql/data/ODS_INDEX02.mdf',
+MOVE 'ODS_REPORT01' TO '/var/opt/mssql/data/ODS_REPORT01.mdf',
+MOVE 'ODS_REPORT02' TO '/var/opt/mssql/data/ODS_REPORT02.mdf',
+MOVE 'ODS_TEXTFILE01' TO '/var/opt/mssql/data/ODS_TEXTFILE01.mdf',
+MOVE 'ODS_TEXTFILE02' TO '/var/opt/mssql/data/ODS_TEXTFILE02.mdf',
+MOVE 'ODS_PARTICIPATION01' TO '/var/opt/mssql/data/ODS_PARTICIPATION01.mdf',
+MOVE 'ODS_PARTICIPATION02' TO '/var/opt/mssql/data/ODS_PARTICIPATION02.mdf',
+MOVE 'PRIMARY_LOG1' TO '/var/opt/mssql/data/NBS_ODSE.ldf'
+GO
