@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.*;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import hashing.HashUtils;
 
 public class NBS_DB {
@@ -17,37 +18,58 @@ public class NBS_DB {
         conn = DriverManager.getConnection(connectionUrl);
     }
 
-    public Map<Long, Long> constructAuxTable(final Set<MatchFieldEnum> attrs) throws SQLException {
+    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
 
-        Set<String> requiredColumns = new HashSet<String>();
+        Set<String> requiredColumns = new HashSet<>();
         for (MatchFieldEnum mfield : attrs) {
             requiredColumns.addAll(MatchFieldUtils.getRequiredColumns(mfield));
         }
         requiredColumns.add(Constants.COL_PERSON_UID);
 
-        Statement query = conn.createStatement();
-        ResultSet rs = query.executeQuery(
-                "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
-                        " from Person"
-        );
+        ResultSet rs;
+        try {
+            Statement query = conn.createStatement();
+            rs = query.executeQuery(
+                    "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
+                            " from Person"
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not connect to and query SQL database");
+        }
 
-        HashMap<Long, Long> auxTable = new HashMap<Long, Long>();
+        Map<Long, Long> idToHash = new HashMap<>();
+        Map<Long, Set<Long>> hashToIDs = new HashMap<>();
 
         // TODO This methodology is sourced from https://stackoverflow.com/questions/7507121/efficient-way-to-handle-resultset-in-java
         // But should be abstracted using a standard library like DBUtils or MapListHandler
-        while (rs.next()) {
-            HashMap attr_map = new HashMap<MatchFieldEnum, Object>();
 
-            for (MatchFieldEnum mfield : attrs) {
-                attr_map.put(mfield, MatchFieldUtils.getFieldValue(rs, mfield));
+        try {
+            while (rs.next()) {
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+
+                for (MatchFieldEnum mfield : attrs) {
+                    attr_map.put(mfield, MatchFieldUtils.getFieldValue(rs, mfield));
+                }
+
+                long record_id = (long) MatchFieldUtils.getFieldValue(rs, MatchFieldEnum.UID);
+                long hash = HashUtils.hashFields(attr_map);
+
+                idToHash.put(record_id, hash);
+
+                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                if (idsWithSameHash == null) {
+                    idsWithSameHash.add(record_id);
+                } else {
+                    hashToIDs.put(hash, Sets.newHashSet(record_id));
+                }
             }
-
-            auxTable.put(
-                    (long) MatchFieldUtils.getFieldValue(rs, MatchFieldEnum.UID),
-                    HashUtils.hashFields(attr_map)
-            );
+        } catch (SQLException e) {
+            // TODO Exception Handling
+            e.printStackTrace();
+            throw new RuntimeException("Error while trying to scan database entries");
         }
 
-        return auxTable;
+        return new AuxMap(attrs, idToHash, hashToIDs);
     }
 }
