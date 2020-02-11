@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b3d1178f-645e-4083-8577-07f8030de98b" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/abstraction/AuxMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/abstraction/AuxMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/abstraction/NBS_DB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/abstraction/NBS_DB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/algorithm/dedup.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/algorithm/dedup.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -59,7 +61,7 @@
       <recent name="groovy.util.GroovyTestCase" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.NBS_DBTest.testGetOrCreateAuxTable">
+  <component name="RunManager" selected="Gradle.NBS_DBTest">
     <configuration name="NBS_DBTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -162,9 +164,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.NBS_DBTest" />
         <item itemvalue="Gradle.NBS_DBTest.testGetOrCreateAuxTable" />
         <item itemvalue="Gradle.NBS_DBTest.testCreateAuxTable" />
-        <item itemvalue="Gradle.NBS_DBTest" />
         <item itemvalue="Gradle.NBS_DBTest.testGetPersonIDs" />
         <item itemvalue="Gradle.NBS_DBTest.databaseConnectedSucceeds" />
       </list>

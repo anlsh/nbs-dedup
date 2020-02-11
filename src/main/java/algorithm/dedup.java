@@ -2,6 +2,7 @@ package algorithm;
 
 import abstraction.MatchFieldEnum;
 import abstraction.NBS_DB;
+import abstraction.AuxMap;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,31 +29,6 @@ public class dedup {
 
     }
 
-    public void serializeTable(String id2fieldName, String field2idName, List<Map<Long, Long>> pair){
-        //serialize hashmap locally
-        Map<Long, Long> auxTable_idToAttr = pair.get(0);
-        Map<Long, Long> auxTable_attrToId = pair.get(1);
-
-        try
-        {
-            FileOutputStream fos = new FileOutputStream(id2fieldName);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(auxTable_idToAttr);
-            oos.close();
-            fos.close();
-            System.out.printf("Serialized HashMap data is saved in data/id2fields.ser");
-
-            FileOutputStream fos2 = new FileOutputStream(field2idName);
-            ObjectOutputStream oos2 = new ObjectOutputStream(fos2);
-            oos2.writeObject(auxTable_attrToId);
-            oos2.close();
-            fos2.close();
-            System.out.printf("Serialized HashMap data is saved in data/fields2id.ser");
-        }catch(IOException ioe)
-        {
-            ioe.printStackTrace();
-        }
-    }
 
     public void create_or_get_aux_db(NBS_DB db, List<Set<MatchFieldEnum>> field_subset) throws SQLException {
         create_or_get_aux_db(db, field_subset, true);
@@ -66,48 +42,24 @@ public class dedup {
         //each pair is an id->field and field->id map
         for (Set<MatchFieldEnum> matchSet : field_subset) {
 
-            if (forceReplace == false && auxTables.containsKey(db.calculateAttrStr(matchSet))){
+            if (forceReplace == false && auxTables.containsKey(AuxMap.calculateAttrStr(matchSet))){
                 continue;
             }
 
-            if (db.auxTableExists(matchSet)) {
-                List pair = db.deserializeTables(matchSet);
+            if (AuxMap.auxTableExists(matchSet)) {
+                List pair = AuxMap.deserializeTables(matchSet);
                 tables.add(pair);
-                this.auxTables.put(db.calculateAttrStr(matchSet), pair);
+                this.auxTables.put(AuxMap.calculateAttrStr(matchSet), pair);
             } else {
                 List pair = db.constructAuxTable(matchSet);
                 tables.add(pair);
-                this.auxTables.put(db.calculateAttrStr(matchSet), pair);
+                this.auxTables.put(AuxMap.calculateAttrStr(matchSet), pair);
 
             }
         }
     }
 
-    public void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
 
-        create_or_get_aux_db(db, List.of(attr));
-        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
-
-        if (auxPair == null){
-            return;
-        }
-
-        auxPair.get(0).put(id, hash);
-        auxPair.get(1).put(hash, id);
-    }
-
-    public void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
-        create_or_get_aux_db(db, List.of(attr));
-        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
-
-        if (auxPair == null) {
-            return;
-        }
-
-        auxPair.get(0).remove(id);
-        auxPair.get(1).remove(hash);
-
-    }
 
 
     //Doesn't actually work
