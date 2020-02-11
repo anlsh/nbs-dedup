@@ -24,3 +24,6 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+#ignore datafiles
+data/*
