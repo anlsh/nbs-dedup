@@ -120,36 +120,7 @@ public class AuxMap { //manages the aux maps
         return null;
     };
 
-    public void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
 
-        create_or_get_aux_db(db, List.of(attr));
-        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
-
-        if (auxPair == null){
-            return;
-        }
-
-        auxPair.get(0).put(id, hash);
-        auxPair.get(1).put(hash, id);
-
-        attrStr = AuxMap.calculateAttrStr(attr);
-        AuxMap.serializeTable(attr, auxPair);
-    }
-
-    public void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
-        create_or_get_aux_db(db, List.of(attr));
-        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
-
-        if (auxPair == null) {
-            return;
-        }
-
-        auxPair.get(0).remove(id);
-        auxPair.get(1).remove(hash);
-
-        AuxMap.serializeTable(attr, auxPair);
-
-    }
 
     public static String calculateAttrStr(Set<MatchFieldEnum> attrs){
         List<MatchFieldEnum> attrList = new ArrayList<MatchFieldEnum>(attrs);

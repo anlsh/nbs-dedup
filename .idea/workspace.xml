@@ -6,6 +6,7 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/abstraction/AuxMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/abstraction/AuxMap.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/abstraction/NBS_DB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/abstraction/NBS_DB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/algorithm/dedup.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/algorithm/dedup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/abstraction/NBS_DBTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/abstraction/NBS_DBTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +49,7 @@
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.Groovy JUnit" value="groovy.util.GroovyTestCase" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit4" value="" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="project.structure.last.edited" value="Libraries" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.2" />
   </component>
@@ -82,12 +83,12 @@
       <GradleScriptDebugEnabled>false</GradleScriptDebugEnabled>
       <method v="2" />
     </configuration>
-    <configuration name="NBS_DBTest.databaseConnectedSucceeds" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="NBS_DBTest.testAddHook" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="--tests &quot;abstraction.NBS_DBTest.databaseConnectedSucceeds&quot;" />
+        <option name="scriptParameters" value="--tests &quot;abstraction.NBS_DBTest.testAddHook&quot;" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -142,12 +143,12 @@
       <GradleScriptDebugEnabled>false</GradleScriptDebugEnabled>
       <method v="2" />
     </configuration>
-    <configuration name="NBS_DBTest.testGetPersonIDs" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="NBS_DBTest.testRemoveHook" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="--tests &quot;abstraction.NBS_DBTest.testGetPersonIDs&quot;" />
+        <option name="scriptParameters" value="--tests &quot;abstraction.NBS_DBTest.testRemoveHook&quot;" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -165,10 +166,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.NBS_DBTest" />
+        <item itemvalue="Gradle.NBS_DBTest.testRemoveHook" />
+        <item itemvalue="Gradle.NBS_DBTest.testAddHook" />
         <item itemvalue="Gradle.NBS_DBTest.testGetOrCreateAuxTable" />
         <item itemvalue="Gradle.NBS_DBTest.testCreateAuxTable" />
-        <item itemvalue="Gradle.NBS_DBTest.testGetPersonIDs" />
-        <item itemvalue="Gradle.NBS_DBTest.databaseConnectedSucceeds" />
       </list>
     </recent_temporary>
   </component>
@@ -198,29 +199,34 @@
       <screen x="89" y="32" width="1831" height="1048" />
     </state>
     <state x="782" y="303" width="424" height="519" key="FileChooserDialogImpl/89.32.1831.1048@89.32.1831.1048" timestamp="1581360069176" />
-    <state width="1634" height="289" key="GridCell.Tab.0.bottom" timestamp="1581444253570">
-      <screen x="0" y="0" width="1680" height="1017" />
+    <state width="1320" height="189" key="GridCell.Tab.0.bottom" timestamp="1581451452313">
+      <screen x="0" y="0" width="1366" height="735" />
     </state>
+    <state width="1320" height="189" key="GridCell.Tab.0.bottom/0.0.1366.735@0.0.1366.735" timestamp="1581451452313" />
     <state width="1634" height="289" key="GridCell.Tab.0.bottom/1680.282.1366.768/0.0.1680.1017@0.0.1680.1017" timestamp="1581444253570" />
     <state width="1789" height="275" key="GridCell.Tab.0.bottom/89.32.1831.1048@89.32.1831.1048" timestamp="1581378618855" />
-    <state width="1634" height="289" key="GridCell.Tab.0.center" timestamp="1581444253570">
-      <screen x="0" y="0" width="1680" height="1017" />
+    <state width="1320" height="189" key="GridCell.Tab.0.center" timestamp="1581451452312">
+      <screen x="0" y="0" width="1366" height="735" />
     </state>
+    <state width="1320" height="189" key="GridCell.Tab.0.center/0.0.1366.735@0.0.1366.735" timestamp="1581451452312" />
     <state width="1634" height="289" key="GridCell.Tab.0.center/1680.282.1366.768/0.0.1680.1017@0.0.1680.1017" timestamp="1581444253570" />
     <state width="1789" height="275" key="GridCell.Tab.0.center/89.32.1831.1048@89.32.1831.1048" timestamp="1581378618853" />
-    <state width="1634" height="289" key="GridCell.Tab.0.left" timestamp="1581444253570">
-      <screen x="0" y="0" width="1680" height="1017" />
+    <state width="1320" height="189" key="GridCell.Tab.0.left" timestamp="1581451452312">
+      <screen x="0" y="0" width="1366" height="735" />
     </state>
+    <state width="1320" height="189" key="GridCell.Tab.0.left/0.0.1366.735@0.0.1366.735" timestamp="1581451452312" />
     <state width="1634" height="289" key="GridCell.Tab.0.left/1680.282.1366.768/0.0.1680.1017@0.0.1680.1017" timestamp="1581444253570" />
     <state width="1789" height="275" key="GridCell.Tab.0.left/89.32.1831.1048@89.32.1831.1048" timestamp="1581378618852" />
-    <state width="1634" height="289" key="GridCell.Tab.0.right" timestamp="1581444253570">
-      <screen x="0" y="0" width="1680" height="1017" />
+    <state width="1320" height="189" key="GridCell.Tab.0.right" timestamp="1581451452313">
+      <screen x="0" y="0" width="1366" height="735" />
     </state>
+    <state width="1320" height="189" key="GridCell.Tab.0.right/0.0.1366.735@0.0.1366.735" timestamp="1581451452313" />
     <state width="1634" height="289" key="GridCell.Tab.0.right/1680.282.1366.768/0.0.1680.1017@0.0.1680.1017" timestamp="1581444253570" />
     <state width="1789" height="275" key="GridCell.Tab.0.right/89.32.1831.1048@89.32.1831.1048" timestamp="1581378618854" />
-    <state x="487" y="133" width="1024" height="852" key="SettingsEditor" timestamp="1581360270379">
-      <screen x="89" y="32" width="1831" height="1048" />
+    <state x="297" y="71" width="1024" height="852" key="SettingsEditor" timestamp="1581449444295">
+      <screen x="0" y="0" width="1366" height="735" />
     </state>
+    <state x="297" y="71" key="SettingsEditor/0.0.1366.735@0.0.1366.735" timestamp="1581449444295" />
     <state x="487" y="133" width="1024" height="852" key="SettingsEditor/89.32.1831.1048@89.32.1831.1048" timestamp="1581360270379" />
     <state x="444" y="246" key="com.intellij.ide.util.TipDialog" timestamp="1581447664013">
       <screen x="0" y="0" width="1366" height="735" />

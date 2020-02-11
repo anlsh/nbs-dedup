@@ -59,6 +59,36 @@ public class dedup {
         }
     }
 
+    public void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
+
+        create_or_get_aux_db(db, List.of(attr));
+        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
+
+        if (auxPair == null){
+            return;
+        }
+
+        auxPair.get(0).put(id, hash);
+        auxPair.get(1).put(hash, id);
+
+        String attrStr = AuxMap.calculateAttrStr(attr);
+        AuxMap.serializeTable(attr, auxPair);
+    }
+
+    public void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attr, Long id, Long hash) throws SQLException {
+        create_or_get_aux_db(db, List.of(attr));
+        List<Map<Long, Long>> auxPair = this.auxTables.getOrDefault(attr, null);
+
+        if (auxPair == null) {
+            return;
+        }
+
+        auxPair.get(0).remove(id);
+        auxPair.get(1).remove(hash);
+
+        AuxMap.serializeTable(attr, auxPair);
+
+    }
 
 
 
@@ -70,22 +100,25 @@ public class dedup {
 
         // Create the auxiliary databases if they don't already exist.
         create_or_get_aux_db(db, config);
-        /*
-        List<Set<DatabaseRecord>> dup_list = new ArrayList<>();
+
+        List<List<Long>> dup_list = new ArrayList<>();
 
         int totalRecords = 0;
-        // Structure loop so that we only load each auxiliary database into memory once...
-        for (Set<RecordFields> field_subset : config) {
-            AuxDatabase aux_db = create_or_get_aux_db(db, field_subset);
 
-           for (DatabaseRecord r : db.get_id_list()) {
-                long aux_hash = aux_db.get_hash_for_id(r);
-                for (DatabaseRecord dup_record : aux_db.ids_mapping_to_hash(aux_hash)) {
-                    dup_list.add(Set.of(r, dup_record));
+        for (Set<MatchFieldEnum> field_subset : config) {
+            List<Map<Long, Long>> auxTablePair = this.auxTables.get(AuxMap.calculateAttrStr(field_subset));
+            for (Map.Entry<Long, Long> entry : auxTablePair.get(0).entrySet()) {
+                //for each id, get its attr hash and check if attr2id points back correctly
+                long attrHash = entry.getValue();
+
+                //if we find a pair add it here
+                if (auxTablePair.get(1).get(attrHash) != entry.getKey()) {
+                    dup_list.add(Arrays.asList(entry.getKey(), auxTablePair.get(1).get(attrHash)));
                 }
             }
         }
 
+/*
        List<Set<DatabaseRecord>> finalDups = new ArrayList<>();
         // TODO Merge sequences of duplicates like [r1, r2], [r2, r3], ... into [r1, r2, r3], ...
         while(dup_list.size() > 0){

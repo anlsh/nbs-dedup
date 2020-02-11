@@ -38,4 +38,14 @@ public class NBS_DBTest {
                 Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME))));
     }
 
+    @Test
+    public void testAddHook() throws Exception{
+        dedupService.hookAddRecord(db, Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.SSN)), 100L, 100L);
+    }
+
+    @Test
+    public void testRemoveHook() throws Exception{
+        dedupService.hookRemoveRecord(db, Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.SSN)), 100L, 100L);
+    }
+
 }
