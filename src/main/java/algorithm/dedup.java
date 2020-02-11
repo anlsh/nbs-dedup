@@ -1,11 +1,5 @@
 package algorithm;
 
-import abstraction.AuxDatabase;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 public class dedup {
 
 //    public dedup (String host, String username, String password, String auxDatabasePath){
