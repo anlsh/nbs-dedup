@@ -8,18 +8,18 @@ import java.sql.SQLException;
 
 public class dedup {
 
-    public dedup (String host, String username, String password, String auxDatabasePath){
-        //create connections to sql database
-        try {
-            Connection con = DriverManager.getConnection(host, username, password);
-        }
-        catch (SQLException err){
-            System.out.println((err.getMessage()));
-        }
-
-        AuxDatabase aux = new AuxDatabase(auxDatabasePath);
-    }
-
+//    public dedup (String host, String username, String password, String auxDatabasePath){
+//        //create connections to sql database
+//        try {
+//            Connection con = DriverManager.getConnection(host, username, password);
+//        }
+//        catch (SQLException err){
+//            System.out.println((err.getMessage()));
+//        }
+//
+//        AuxDatabase aux = new AuxDatabase(auxDatabasePath);
+//    }
+//
 //    public static AuxDatabase create_or_get_aux_db(NBS_DB db, Set<RecordFields> field_subset){
 //        // TODO implement
 //        //check if table is in database
