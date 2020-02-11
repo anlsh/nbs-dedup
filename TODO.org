@@ -1,0 +1,8 @@
+* TODO [#A] Aux Maps must be bidirectional
+* TODO [#A] Aux maps management in local dir
+* TODO [#A] Aux map manager has to handle addition/deletion of entries
+* TODO [#A] Function calls in dedup algorithm must be updated to real functions
+* TODO [#A] HashingUtils needs to be completed
+* TODO [#B] Tests for all of the above
+
+* TODO [#B] API needs to be paralellized to extent possible

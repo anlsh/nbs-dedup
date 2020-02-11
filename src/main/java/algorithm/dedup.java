@@ -1,7 +1,5 @@
 package algorithm;
 
-import abstraction.AuxDatabase;
-import abstraction.DatabaseRecord;
 import abstraction.MatchFieldEnum;
 import abstraction.NBS_DB;
 
@@ -19,25 +17,24 @@ public class dedup {
     private NBS_DB db;
     private Map<String, List<Map<Long, Long>>> auxTables = new HashMap<>();
 
-    public dedup (NBS_DB db){
+    public dedup(NBS_DB db) {
         this.db = db;
 
 
     }
 
-    public AuxDatabase create_or_get_aux_db(NBS_DB db, List<Set<MatchFieldEnum>> field_subset) throws SQLException {
+    public void create_or_get_aux_db(NBS_DB db, List<Set<MatchFieldEnum>> field_subset) throws SQLException {
         // TODO implement
         //check if table is in database
         List<List<Map<Long, Long>>> tables = new ArrayList<>();
         //tables is a list of pairs represented as a list of length 2
         //each pair is an id->field and field->id map
-        for (Set<MatchFieldEnum> matchSet: field_subset){
-            if(db.auxTableExists(matchSet)){
+        for (Set<MatchFieldEnum> matchSet : field_subset) {
+            if (db.auxTableExists(matchSet)) {
                 List pair = db.deserializeTables(matchSet);
                 tables.add(pair);
                 this.auxTables.put(db.calculateAttrStr(matchSet), pair);
-            }
-            else {
+            } else {
                 List pair = db.constructAuxTable(matchSet);
                 tables.add(pair);
                 this.auxTables.put(db.calculateAttrStr(matchSet), pair);
@@ -46,19 +43,17 @@ public class dedup {
         }
 
         //otherwise
-        return null;
     }
 
 
     //Doesn't actually work
-    public List<Set<DatabaseRecord>> get_duplicates(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    public void get_duplicates(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {
         // Given a database and a list of sets of recordfields, return a list of duplicates
         // God this documentation SUCKS I'm really sorry
         //^no ur fukin not
 
         // Create the auxiliary databases if they don't already exist.
         create_or_get_aux_db(db, config);
-        return null; //placehold
         /*
         List<Set<DatabaseRecord>> dup_list = new ArrayList<>();
 
