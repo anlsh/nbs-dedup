@@ -87,6 +87,10 @@ public class NBS_DB {
         {
             ioe.printStackTrace();
         }
-        return List.of(auxTable_idToAttr, auxTable_attrToId);
+
+        List<Map<Long, Long>> values = new ArrayList<>();
+        values.add(auxTable_idToAttr);
+        values.add(auxTable_attrToId);
+        return values;
     }
 }
