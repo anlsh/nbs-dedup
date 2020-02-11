@@ -5,6 +5,7 @@ import java.util.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 import hashing.HashUtils;
 
 public class NBS_DB {
@@ -38,8 +39,8 @@ public class NBS_DB {
             throw new RuntimeException("Could not connect to and query SQL database");
         }
 
-        Map<Long, Long> idToHash = new HashMap<>();
-        Map<Long, Set<Long>> hashToIDs = new HashMap<>();
+        Map<Long, HashCode> idToHash = new HashMap<>();
+        Map<HashCode, Set<Long>> hashToIDs = new HashMap<>();
 
         // TODO This methodology is sourced from https://stackoverflow.com/questions/7507121/efficient-way-to-handle-resultset-in-java
         // But should be abstracted using a standard library like DBUtils or MapListHandler
@@ -53,7 +54,7 @@ public class NBS_DB {
                 }
 
                 long record_id = (long) MatchFieldUtils.getFieldValue(rs, MatchFieldEnum.UID);
-                long hash = HashUtils.hashFields(attr_map);
+                HashCode hash = HashUtils.hashFields(attr_map);
 
                 idToHash.put(record_id, hash);
 

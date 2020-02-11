@@ -42,4 +42,19 @@ public class MatchFieldUtils {
             throw new RuntimeException("Attempted to get columns for unknown MatchField " + mfield);
         }
     }
+
+    public static Class getFieldType(MatchFieldEnum mfield) {
+        //TODO check these against actual types returned by rs.getObject on the relevant fields
+        if (mfield == MatchFieldEnum.UID) {
+            return Long.class;
+        } else if (mfield == MatchFieldEnum.FIRST_NAME) {
+            return String.class;
+        } else if (mfield == MatchFieldEnum.LAST_NAME) {
+            return String.class;
+        } else if (mfield == MatchFieldEnum.SSN) {
+            return String.class;
+        } else {
+            throw new RuntimeException("Attempted to get type for unknown MatchField " + mfield);
+        }
+    }
 }

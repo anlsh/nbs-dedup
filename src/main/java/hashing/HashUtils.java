@@ -1,11 +1,13 @@
 package hashing;
 
 import abstraction.MatchFieldEnum;
+import abstraction.MatchFieldUtils;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
 
+import javax.naming.OperationNotSupportedException;
 import java.nio.charset.Charset;
-import java.util.Map;
+import java.util.*;
 
 public class HashUtils {
     public static HashFunction hashFunction = Hashing.sipHash24();
@@ -75,10 +77,43 @@ public class HashUtils {
     }
 
      */
-    public static long hashFields(Map<MatchFieldEnum, Object> record) {
+
+    public static void putIntoHasher(Hasher hasher, Class type, Object object) throws OperationNotSupportedException {
+        if(type == String.class) {
+            hasher.putString((String) object, charset);
+        } else if(type == Integer.class) {
+            hasher.putInt((Integer) object);
+        } else if(type == Long.class) {
+            hasher.putLong((Long) object);
+        } else {
+            throw new OperationNotSupportedException("Putting an object of type " + type.toString() + " in a hasher is unsupported");
+        }
+        //TODO expand this to all reasonable types
+    }
+
+    public static HashCode hashFields(Map<MatchFieldEnum, Object> record) {
         // TODO Implement!
         // TODO Raise an error if Person_UID is ever part of the hash since that would be a subtle and
         // soul-crushing bug.
-        throw new UnsupportedOperationException("Hashing of record field subsets is not supported yet!");
+        //throw new UnsupportedOperationException("Hashing of record field subsets is not supported yet!");
+        Set<MatchFieldEnum> keySet = record.keySet();
+        MatchFieldEnum[] sortedKeys = new MatchFieldEnum[keySet.size()];
+        int i = 0;
+        for(MatchFieldEnum key : keySet) {
+            sortedKeys[i] = key;
+            i++;
+        }
+        Arrays.sort(sortedKeys);
+        Hasher hasher = hashFunction.newHasher();
+        for(i = 0; i < sortedKeys.length; i++) {
+            //TODO add sizes to make these more unique
+            try {
+                putIntoHasher(hasher, MatchFieldUtils.getFieldType(sortedKeys[i]), record.get(sortedKeys[i]));
+            } catch(OperationNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return hasher.hash();
     }
 }
