@@ -33,7 +33,7 @@ public class NBS_DBTest {
 
     @Test
     public void testGetDuplicates() throws Exception{
-        dedupService.get_duplicates(db, Lists.newArrayList(Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.SSN)),
+        dedupService.getMatching(db, Lists.newArrayList(Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.SSN)),
                 Sets.newHashSet(Lists.newArrayList(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME))));
     }
 

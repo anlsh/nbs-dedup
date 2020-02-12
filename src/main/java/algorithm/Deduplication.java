@@ -1,5 +1,6 @@
 package algorithm;
 
+import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
 import abstraction.NBS_DB;
 import abstraction.AuxMap;
@@ -51,6 +52,13 @@ public class Deduplication {
 //    }
 
 
+    public Set<Set<Long>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+        List<AuxMap> auxMaps = new ArrayList<>(config.size());
+        for(int i = 0; i < config.size(); i++) {
+            auxMaps.set(i, AuxMapManager.getAuxMap(db, config.get(i)));
+        }
+        //TODO come back to this
+    }
 
 //    //Doesn't actually work
 //    public void get_duplicates(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {

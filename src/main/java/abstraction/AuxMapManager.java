@@ -79,4 +79,7 @@ public class AuxMapManager {
             return aux;
         }
     }
+    public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs) {
+        return getAuxMap(db, attrs, false);
+    }
 }

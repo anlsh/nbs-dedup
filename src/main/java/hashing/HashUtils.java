@@ -57,34 +57,16 @@ public class HashUtils {
         return hashFunction.newHasher().putObject(t, funnel).hash();
     }
 
-    /*
-    Disabled because I can't guarantee that a map with the same contents will be looped through in the same
-    order, so it might not get the same hash, which is bad.
-    enum FieldsFunnel implements Funnel<Map<String, Object>> {
-        INSTANCE;
-        public void funnel(Map<String, Object> fields, PrimitiveSink into) {
-            for(String s : fields.keySet()) {
-                into.putString(s, schemaCharset);
-                String serial = fields.get(s).toString();
-                into.putInt(serial.length());
-                into.putUnencodedChars(serial);
-            }
-        }
-    }
-
-    public static HashCode hash(Map<String, Object> fields, Map<String, Class<?>> typeMap) {
-
-    }
-
-     */
-
     public static void putIntoHasher(Hasher hasher, Class type, Object object) throws OperationNotSupportedException {
         if(type == String.class) {
-            hasher.putString((String) object, charset);
+            if(object == null) hasher.putString("", charset);
+            else hasher.putString((String) object, charset);
         } else if(type == Integer.class) {
-            hasher.putInt((Integer) object);
+            if(object == null) hasher.putInt(0);
+            else hasher.putInt((Integer) object);
         } else if(type == Long.class) {
-            hasher.putLong((Long) object);
+            if(object == null) hasher.putInt(0);
+            else hasher.putLong((Long) object);
         } else {
             throw new OperationNotSupportedException("Putting an object of type " + type.toString() + " in a hasher is unsupported");
         }
@@ -92,10 +74,8 @@ public class HashUtils {
     }
 
     public static HashCode hashFields(Map<MatchFieldEnum, Object> record) {
-        // TODO Implement!
         // TODO Raise an error if Person_UID is ever part of the hash since that would be a subtle and
         // soul-crushing bug.
-        //throw new UnsupportedOperationException("Hashing of record field subsets is not supported yet!");
         Set<MatchFieldEnum> keySet = record.keySet();
         MatchFieldEnum[] sortedKeys = new MatchFieldEnum[keySet.size()];
         int i = 0;
