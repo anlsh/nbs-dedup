@@ -59,7 +59,7 @@ public class NBS_DB {
                 idToHash.put(record_id, hash);
 
                 Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                if (idsWithSameHash == null) {
+                if (idsWithSameHash != null) {
                     idsWithSameHash.add(record_id);
                 } else {
                     hashToIDs.put(hash, Sets.newHashSet(record_id));
