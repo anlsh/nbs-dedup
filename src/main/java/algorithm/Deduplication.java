@@ -58,6 +58,7 @@ public class Deduplication {
             auxMaps.set(i, AuxMapManager.getAuxMap(db, config.get(i)));
         }
         //TODO come back to this
+        return null;
     }
 
 //    //Doesn't actually work
