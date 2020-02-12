@@ -39,18 +39,18 @@ public class AuxMapManagerTest {
         Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
-        AuxMap fnameAux = AuxMapManager.getAuxMap(db, mfields, false);
+        AuxMapManager.getAuxMap(db, mfields, false);
         assert AuxMapManager.auxMapExists(mfields);
     }
 
     @Test
     public void testAuxMapManualLoadAndSave() {
 
-        int MAGIC_KEY = 7;
+        long MAGIC_KEY = 7;
 
-        Map<Long, HashCode> dummyData = new HashMap<Long, HashCode>();
-        dummyData.put(new Long(MAGIC_KEY), null);
-        Set<MatchFieldEnum> empty = new HashSet();
+        Map<Long, HashCode> dummyData = new HashMap<>();
+        dummyData.put(MAGIC_KEY, null);
+        Set<MatchFieldEnum> empty = new HashSet<>();
         AuxMap emptyAux = new AuxMap(empty, dummyData, null);
 
         assert !AuxMapManager.auxMapExists(empty);
