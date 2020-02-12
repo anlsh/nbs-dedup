@@ -8,7 +8,10 @@ import java.util.Set;
 
 public class AuxMapManager {
 
-    public static final String DATA_ROOT = "/tmp/aux-maps/";
+    private static String DATA_ROOT = "/tmp/aux-maps/";
+    public static String getDataRoot() { return DATA_ROOT; }
+    // TODO Make the setter for this do proper validation on directory name
+    public static void setDataRoot(String curr) { DATA_ROOT = curr; }
 
     public static String mfieldSetToString(final Set<MatchFieldEnum> attrs) {
         // TODO mfieldSetToString is called in a bunch of places, so there's some duplicate work there...
@@ -37,7 +40,12 @@ public class AuxMapManager {
         deleteAuxMap(aux.attrs);
 
         try {
-            FileOutputStream fos = new FileOutputStream(mfieldSetToFilename(aux.attrs));
+            File auxMapFile = new File(mfieldSetToFilename(aux.attrs));
+            if (auxMapFile.getParentFile() != null) {
+                auxMapFile.getParentFile().mkdirs();
+            }
+
+            FileOutputStream fos = new FileOutputStream(auxMapFile);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(aux);
             oos.close();
