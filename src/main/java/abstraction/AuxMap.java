@@ -16,4 +16,12 @@ public class AuxMap implements Serializable {
         this.idToHashMap = idToHash;
         this.hashToIdMap = hashToId;
     }
+
+    public Map<HashCode, Set<Long>> getHashToIdMap() {
+        return hashToIdMap;
+    }
+
+    public Map<Long, HashCode> getIdToHashMap() {
+        return idToHashMap;
+    }
 }

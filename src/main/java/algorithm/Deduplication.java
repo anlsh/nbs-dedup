@@ -4,6 +4,7 @@ import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
 import abstraction.NBS_DB;
 import abstraction.AuxMap;
+import com.google.common.hash.HashCode;
 
 import java.util.*;
 
@@ -51,15 +52,68 @@ public class Deduplication {
 //
 //    }
 
+    // Gets duplicates given a list of various configurations
+    public List<Set<Set<Long>>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) {
 
-    public Set<Set<Long>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) {
-        List<AuxMap> auxMaps = new ArrayList<>(config.size());
+        //each set in all matches corresponds to a configuration
+        List<Set<Set<Long>>> allMatches = new ArrayList<>();
+
         for(int i = 0; i < config.size(); i++) {
-            auxMaps.set(i, AuxMapManager.getAuxMap(db, config.get(i)));
+            AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
+            Set<Set<Long>> matchesForCurrentConfig = new HashSet<>();
+            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
+                if (entry.getValue().size() > 1) {
+                    matchesForCurrentConfig.add(entry.getValue());
+                }
+            }
+            allMatches.add(matchesForCurrentConfig);
         }
-        //TODO come back to this
-        return null;
+        //System.out.println(allMatches);
+        return allMatches;
     }
+
+    public List<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+        List<Set<Long>> allMatches = new ArrayList<>();
+
+        for(int i = 0; i < config.size(); i++) {
+            AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
+
+            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
+                if (entry.getValue().size() > 1) {
+                    allMatches.add(entry.getValue());
+                }
+            }
+        }
+        List<Set<Long>> finalDups = new ArrayList<>();
+
+        // TODO Merge sequences of duplicates like [r1, r2], [r2, r3], ... into [r1, r2, r3], ...
+        while(allMatches.size() > 0){
+            Set<Long> firstSet = allMatches.get(0);
+            int i = 1;
+            while (i < allMatches.size()){
+                Set<Long> setToCompare = allMatches.get(i);
+                Set<Long> intersection = new HashSet<Long>(setToCompare);
+
+                //calc intersection
+                intersection.retainAll(firstSet);
+                if (intersection.size() != 0){  //if there is overlap merge
+                    firstSet.addAll(setToCompare);
+                    allMatches.remove(i);
+
+                }
+                else {
+                    i++;
+                }
+            }
+
+            finalDups.add(firstSet);
+            allMatches.remove(0);
+
+        }
+        //System.out.println(allMatches);
+        return finalDups;
+    }
+
 
 //    //Doesn't actually work
 //    public void get_duplicates(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {
