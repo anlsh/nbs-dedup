@@ -42,10 +42,10 @@ public class NBS_DB {
         ResultSet rs;
         try {
             Statement query = conn.createStatement();
-            rs = query.executeQuery(
-                    "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
-                            " from Person where " + Constants.COL_PERSON_UID + " = " + id
-            );
+            String q = "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
+                    " from Person where " + Constants.COL_PERSON_UID + " = " + id;
+            rs = query.executeQuery(q);
+            rs.next();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not query SQL DB to find Person with id "
