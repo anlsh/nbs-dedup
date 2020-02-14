@@ -9,5 +9,5 @@ public class Constants {
     static final int DB_PORT = 1433;
     static final String DB_NAME = "ODS_PRIMARY_DATA01";
     static final String DB_USERNAME = "SA";
-    static final String DB_PASSWORD = "saYyWbfZT4ni7t";
+    static final String DB_PASSWORD = "saYyWbfZT5ni7t";
 }
