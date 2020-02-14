@@ -19,8 +19,8 @@ public class NBS_DBTest {
 
     @Before
     public void setupDatabaseConnection() throws SQLException {
-        db = new NBS_DB("localhost", 1432, "ODS_PRIMARY_DATA01",
-                "SA", "saYyWbfZT4ni7t");
+        db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
+                "SA", "saYyWbfZT5ni7t");
         dService = new Deduplication();
     }
 
