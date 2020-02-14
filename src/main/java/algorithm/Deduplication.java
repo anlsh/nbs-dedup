@@ -1,9 +1,6 @@
 package algorithm;
 
-import abstraction.AuxMapManager;
-import abstraction.MatchFieldEnum;
-import abstraction.NBS_DB;
-import abstraction.AuxMap;
+import abstraction.*;
 import com.google.common.hash.HashCode;
 
 import java.util.*;
@@ -58,12 +55,33 @@ public class Deduplication {
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
 
-        for(int i = 0; i < config.size(); i++) {
-            AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
+        //for(int i = 0; i < config.size(); i++) {
+            //AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
+        for(Set<MatchFieldEnum> fieldsToMatchOn : config) {
+            AuxMap auxMap = AuxMapManager.getAuxMap(db, fieldsToMatchOn);
             Set<Set<Long>> matchesForCurrentConfig = new HashSet<>();
-            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
-                if (entry.getValue().size() > 1) {
-                    matchesForCurrentConfig.add(entry.getValue());
+//            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
+//                if (entry.getValue().size() > 1) {
+//                    //TODO: Check for actual match before adding, not just matching hash
+//                    matchesForCurrentConfig.add(entry.getValue());
+//                }
+//            }
+            for(Set<Long> idsWithMatchingHashes : auxMap.getHashToIdMap().values()) {
+                while(idsWithMatchingHashes.size() > 1) {
+                    //TODO
+                    //Hashes match, check for actual matches within set using fieldsToMatchOn and read db
+                    //For actual matches, add to a new set, remove from idsWithMatchingHashes, and continue
+                    //The while loop is to take care of the pathological case where we have two different sets
+                    //of records with matching hashes but different actual values (but still more than one record
+                    //for each set of matching fields)
+                    long primary_id = idsWithMatchingHashes.iterator().next();
+                    Map<MatchFieldEnum, Object> primary_row = db.getFieldsById(primary_id, fieldsToMatchOn);
+                    Set<Long> group = new HashSet<>();
+                    for(Long id : idsWithMatchingHashes) {
+                        if(primary_row.equals(db.getFieldsById(id, fieldsToMatchOn))) group.add(id);
+                    }
+                    idsWithMatchingHashes.removeAll(group);
+                    matchesForCurrentConfig.add(group);
                 }
             }
             allMatches.add(matchesForCurrentConfig);
@@ -72,47 +90,51 @@ public class Deduplication {
         return allMatches;
     }
 
-    public List<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
-        List<Set<Long>> allMatches = new ArrayList<>();
-
-        for(int i = 0; i < config.size(); i++) {
-            AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
-
-            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
-                if (entry.getValue().size() > 1) {
-                    allMatches.add(entry.getValue());
-                }
-            }
-        }
-        List<Set<Long>> finalDups = new ArrayList<>();
-
-        // TODO Merge sequences of duplicates like [r1, r2], [r2, r3], ... into [r1, r2, r3], ...
-        while(allMatches.size() > 0){
-            Set<Long> firstSet = allMatches.get(0);
-            int i = 1;
-            while (i < allMatches.size()){
-                Set<Long> setToCompare = allMatches.get(i);
-                Set<Long> intersection = new HashSet<Long>(setToCompare);
-
-                //calc intersection
-                intersection.retainAll(firstSet);
-                if (intersection.size() != 0){  //if there is overlap merge
-                    firstSet.addAll(setToCompare);
-                    allMatches.remove(i);
-
-                }
-                else {
-                    i++;
-                }
-            }
-
-            finalDups.add(firstSet);
-            allMatches.remove(0);
-
-        }
-        //System.out.println(allMatches);
-        return finalDups;
+    public Set<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+        return MergeUtils.merge(getMatching(db, config));
     }
+
+//    public List<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+//        List<Set<Long>> allMatches = new ArrayList<>();
+//
+//        for(int i = 0; i < config.size(); i++) {
+//            AuxMap auxMap = AuxMapManager.getAuxMap(db, config.get(i));
+//
+//            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
+//                if (entry.getValue().size() > 1) {
+//                    allMatches.add(entry.getValue());
+//                }
+//            }
+//        }
+//        List<Set<Long>> finalDups = new ArrayList<>();
+//
+//        // TODO Merge sequences of duplicates like [r1, r2], [r2, r3], ... into [r1, r2, r3], ...
+//        while(allMatches.size() > 0){
+//            Set<Long> firstSet = allMatches.get(0);
+//            int i = 1;
+//            while (i < allMatches.size()){
+//                Set<Long> setToCompare = allMatches.get(i);
+//                Set<Long> intersection = new HashSet<Long>(setToCompare);
+//
+//                //calc intersection
+//                intersection.retainAll(firstSet);
+//                if (intersection.size() != 0){  //if there is overlap merge
+//                    firstSet.addAll(setToCompare);
+//                    allMatches.remove(i);
+//
+//                }
+//                else {
+//                    i++;
+//                }
+//            }
+//
+//            finalDups.add(firstSet);
+//            allMatches.remove(0);
+//
+//        }
+//        //System.out.println(allMatches);
+//        return finalDups;
+//    }
 
 
 //    //Doesn't actually work

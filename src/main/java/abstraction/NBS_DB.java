@@ -17,6 +17,50 @@ public class NBS_DB {
                 + ";user=" + username +  ";password=" + password;
 
         conn = DriverManager.getConnection(connectionUrl);
+        conn.setReadOnly(true); //For safety
+    }
+
+    public ResultSet getResultSetById(long id) {
+        ResultSet ret;
+        try {
+            Statement query = conn.createStatement();
+            ret = query.executeQuery("SELECT * from Person where " + Constants.COL_PERSON_UID + " = " + id);
+        } catch(SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not query SQL DB to find Person with id " + id);
+        }
+        return ret;
+    }
+
+    public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) {
+        Set<String> requiredColumns = new HashSet<>();
+        for (MatchFieldEnum mfield : attrs) {
+            requiredColumns.addAll(MatchFieldUtils.getRequiredColumns(mfield));
+        }
+        requiredColumns.add(Constants.COL_PERSON_UID);
+
+        ResultSet rs;
+        try {
+            Statement query = conn.createStatement();
+            rs = query.executeQuery(
+                    "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
+                            " from Person where " + Constants.COL_PERSON_UID + " = " + id
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not query SQL DB to find Person with id "
+                    + id + " and rows " + String.join(",", Lists.newArrayList(requiredColumns)));
+        }
+        Map<MatchFieldEnum, Object> ret = new HashMap<>();
+        for(MatchFieldEnum mf : attrs) {
+            try {
+                ret.put(mf, MatchFieldUtils.getFieldValue(rs, mf));
+            } catch(SQLException e) {
+                e.printStackTrace();;
+                throw new RuntimeException("Couldn't get value for field " + mf + " in resultset");
+            }
+        }
+        return ret;
     }
 
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {

@@ -19,8 +19,8 @@ public class NBS_DBTest {
 
     @Before
     public void setupDatabaseConnection() throws SQLException {
-        db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
-                "SA", "saYyWbfZT5ni7t");
+        db = new NBS_DB("localhost", 1432, "ODS_PRIMARY_DATA01",
+                "SA", "saYyWbfZT4ni7t");
         dService = new Deduplication();
     }
 
@@ -36,26 +36,6 @@ public class NBS_DBTest {
         assert aux.idToHashMap.size() > 0;
     }
 
-    @Test
-    public void testGetMatches() throws Exception{
-
-        List<Set<MatchFieldEnum>> config = new ArrayList<>();
-        config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
-
-        List<Set<Set<Long>>> res = dService.getMatching(db, config);
-        System.out.println(res);
-    }
-
-    @Test
-    public void testGetMatchesMerge() throws Exception{
-
-        List<Set<MatchFieldEnum>> config = new ArrayList<>();
-        config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
-
-        List<Set<Long>> res = dService.getMatchingMerged(db, config);
-        System.out.println("merged results " + res.toString());
-
-    }
 
 //    @Test
 //    public void testGetOrCreateAuxTable() throws SQLException {
