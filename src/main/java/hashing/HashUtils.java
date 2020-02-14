@@ -76,7 +76,11 @@ public class HashUtils {
     public static HashCode hashFields(Map<MatchFieldEnum, Object> record) {
         // TODO Raise an error if Person_UID is ever part of the hash since that would be a subtle and
         // soul-crushing bug.
+
         Set<MatchFieldEnum> keySet = record.keySet();
+        if(keySet.size() > 1 && keySet.contains(MatchFieldEnum.UID)) {
+            throw new RuntimeException("Trying to hash UID with other fields!");
+        }
         MatchFieldEnum[] sortedKeys = new MatchFieldEnum[keySet.size()];
         int i = 0;
         for(MatchFieldEnum key : keySet) {
