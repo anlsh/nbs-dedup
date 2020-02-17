@@ -26,7 +26,6 @@ public class DeduplicationTest {
                 "SA", "saYyWbfZT5ni7t");
         dService = new Deduplication();
         timer = Stopwatch.createUnstarted();
-
         AuxMapManager.setDataRoot("/tmp/dedup-test-data/");
     }
 
@@ -38,8 +37,6 @@ public class DeduplicationTest {
                 MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.LAST_NAME
         ));
-
-
         timer.start();
         List<Set<Set<Long>>> res = dService.getMatching(db, config);
         timer.stop();
