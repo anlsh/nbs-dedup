@@ -1,5 +1,6 @@
 package algorithm;
 
+import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
 import abstraction.NBS_DB;
 import com.google.common.base.Stopwatch;
@@ -25,6 +26,8 @@ public class DeduplicationTest {
                 "SA", "saYyWbfZT5ni7t");
         dService = new Deduplication();
         timer = Stopwatch.createUnstarted();
+
+        AuxMapManager.setDataRoot("/tmp/dedup-test-data/");
     }
 
     @Test
