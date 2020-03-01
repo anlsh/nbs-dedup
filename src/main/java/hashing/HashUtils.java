@@ -1,7 +1,7 @@
 package hashing;
 
 import abstraction.MatchFieldEnum;
-import abstraction.MatchFieldUtils;
+//import abstraction.MatchFieldUtils;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
 
@@ -87,12 +87,13 @@ public class HashUtils {
             sortedKeys[i] = key;
             i++;
         }
+        // TODO this shouldn't be sorted @ every run of HashCode, just statically once
         Arrays.sort(sortedKeys);
         Hasher hasher = hashFunction.newHasher();
         for(i = 0; i < sortedKeys.length; i++) {
             //TODO add sizes to make these more unique
             try {
-                putIntoHasher(hasher, MatchFieldUtils.getFieldType(sortedKeys[i]), record.get(sortedKeys[i]));
+                putIntoHasher(hasher,  sortedKeys[i].getFieldType(), record.get(sortedKeys[i]));
             } catch(OperationNotSupportedException e) {
                 throw new RuntimeException(e);
             }

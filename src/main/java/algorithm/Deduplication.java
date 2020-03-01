@@ -50,7 +50,7 @@ public class Deduplication {
 //    }
 
     // Gets duplicates given a list of various configurations
-    public List<Set<Set<Long>>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+    public static List<Set<Set<Long>>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) {
 
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
@@ -90,7 +90,7 @@ public class Deduplication {
         return allMatches;
     }
 
-    public Set<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
+    public static Set<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) {
         return MergeUtils.merge(getMatching(db, config));
     }
 

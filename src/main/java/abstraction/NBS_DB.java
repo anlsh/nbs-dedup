@@ -35,7 +35,7 @@ public class NBS_DB {
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) {
         Set<String> requiredColumns = new HashSet<>();
         for (MatchFieldEnum mfield : attrs) {
-            requiredColumns.addAll(MatchFieldUtils.getRequiredColumns(mfield));
+            requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
         }
         requiredColumns.add(Constants.COL_PERSON_UID);
 
@@ -54,7 +54,7 @@ public class NBS_DB {
         Map<MatchFieldEnum, Object> ret = new HashMap<>();
         for(MatchFieldEnum mf : attrs) {
             try {
-                ret.put(mf, MatchFieldUtils.getFieldValue(rs, mf));
+                ret.put(mf,  mf.getFieldValue(rs));
             } catch(SQLException e) {
                 e.printStackTrace();;
                 throw new RuntimeException("Couldn't get value for field " + mf + " in resultset");
@@ -67,7 +67,7 @@ public class NBS_DB {
 
         Set<String> requiredColumns = new HashSet<>();
         for (MatchFieldEnum mfield : attrs) {
-            requiredColumns.addAll(MatchFieldUtils.getRequiredColumns(mfield));
+            requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
         }
         requiredColumns.add(Constants.COL_PERSON_UID);
 
@@ -94,10 +94,10 @@ public class NBS_DB {
                 Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
 
                 for (MatchFieldEnum mfield : attrs) {
-                    attr_map.put(mfield, MatchFieldUtils.getFieldValue(rs, mfield));
+                    attr_map.put(mfield, mfield.getFieldValue(rs));
                 }
 
-                long record_id = (long) MatchFieldUtils.getFieldValue(rs, MatchFieldEnum.UID);
+                long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
                 HashCode hash = HashUtils.hashFields(attr_map);
 
                 idToHash.put(record_id, hash);
