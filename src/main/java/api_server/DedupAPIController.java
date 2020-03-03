@@ -6,8 +6,7 @@ import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
 
 import algorithm.Deduplication;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,29 +25,23 @@ public class DedupAPIController {
     }
 
     @GetMapping("get_dedup_flags")
-    public String[] get_dedup_flags() {
-        return Stream.of(MatchFieldEnum.values()).map(MatchFieldEnum::name).toArray(String[]::new);
-    }
+    public String get_dedup_flags() {
+        // return Stream.of(MatchFieldEnum.values()).map(MatchFieldEnum::name).toArray(String[]::new);
 
-    @GetMapping("get_dedup_flag_parents")
-    public HashMap<String, String> get_dedup_flags_parent() {
-        HashMap<String, String> flagInfoMap = new HashMap<String, String>();
-
+        int attr_id = 0;
+        JsonArray retObject = new JsonArray();
         for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
-            flagInfoMap.put(mfield.name(),
-                    mfield.getParent() == null ? null : mfield.getParent().name());
-        }
-        return flagInfoMap;
-    }
+            JsonObject curr_obj = new JsonObject();
+            curr_obj.add("id", new JsonPrimitive(attr_id));
+            curr_obj.add("attr_code", new JsonPrimitive(mfield.name()));
+            curr_obj.add("parent",
+                    mfield.getParent() == null ? new JsonNull() : new JsonPrimitive(mfield.getParent().name()));
+            curr_obj.add("desc", new JsonPrimitive(mfield.getHumanReadableName()));
 
-    @GetMapping("get_dedup_flag_descs")
-    public HashMap<String, String> get_dedup_flags_desc() {
-        HashMap<String, String> flagInfoMap = new HashMap<String, String>();
-
-        for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
-            flagInfoMap.put(mfield.name(),  mfield.getHumanReadableName());
+            retObject.add(curr_obj);
+            attr_id += 1;
         }
-        return flagInfoMap;
+        return retObject.toString();
     }
 
     @PostMapping("create_subconfig")
