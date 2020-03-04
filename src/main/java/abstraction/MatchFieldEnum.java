@@ -13,6 +13,7 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_PERSON_UID}; }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_PERSON_UID); }
         @Override public Class getFieldType() { return Long.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
     FIRST_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -20,6 +21,7 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_FIRST_NAME); }
         @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
     LAST_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -27,6 +29,7 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_LAST_NAME); }
         @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
     SSN {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -34,6 +37,7 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
         @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
     SSN_LAST_FOUR {
         @Override public MatchFieldEnum getParent() { return SSN; }
@@ -46,6 +50,7 @@ public enum MatchFieldEnum {
             return ssn == null ? null : ssn.substring(0, 1);
         }
         @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
     };
 
     public abstract MatchFieldEnum getParent();
@@ -53,4 +58,5 @@ public enum MatchFieldEnum {
     public abstract String[] getRequiredColumnsArray();
     public abstract Object getFieldValue(ResultSet rs) throws SQLException;
     public abstract Class getFieldType();
+    public abstract boolean isUnknownValue(Object o);
 }

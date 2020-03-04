@@ -93,20 +93,31 @@ public class NBS_DB {
             while (rs.next()) {
                 Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
 
+                boolean include_entry = true;
+
                 for (MatchFieldEnum mfield : attrs) {
+                    Object mfield_val = mfield.getFieldValue(rs);
+                    if (mfield.isUnknownValue(mfield_val)) {
+                        include_entry = false;
+                        break;
+                    }
                     attr_map.put(mfield, mfield.getFieldValue(rs));
                 }
 
-                long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
-                HashCode hash = HashUtils.hashFields(attr_map);
-
-                idToHash.put(record_id, hash);
-
-                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                if (idsWithSameHash != null) {
-                    idsWithSameHash.add(record_id);
+                if (!include_entry) {
+                    continue;
                 } else {
-                    hashToIDs.put(hash, Sets.newHashSet(record_id));
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                    HashCode hash = HashUtils.hashFields(attr_map);
+
+                    idToHash.put(record_id, hash);
+
+                    Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                    if (idsWithSameHash != null) {
+                        idsWithSameHash.add(record_id);
+                    } else {
+                        hashToIDs.put(hash, Sets.newHashSet(record_id));
+                    }
                 }
             }
         } catch (SQLException e) {

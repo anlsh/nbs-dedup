@@ -46,7 +46,7 @@ public class DeduplicationTest {
     }
 
     @Test
-    public void testGetMatchesMerge() throws Exception{
+    public void testGetMatchesMerge() throws Exception {
 
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
