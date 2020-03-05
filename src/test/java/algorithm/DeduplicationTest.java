@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class DeduplicationTest {
     Stopwatch timer;
 
     @Before
-    public void setupDatabaseConnection() throws SQLException {
+    public void setupDatabaseConnection() throws SQLException, IOException {
         db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t");
         dService = new Deduplication();

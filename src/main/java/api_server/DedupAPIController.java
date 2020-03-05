@@ -91,7 +91,6 @@ public class DedupAPIController {
         }
 
         Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(RestServiceApplication.database, config_ls);
-
-        return duplicates.toString();
+        return (new Gson()).toJson(duplicates);
     }
 }
