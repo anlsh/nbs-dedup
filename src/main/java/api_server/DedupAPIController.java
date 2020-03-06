@@ -8,8 +8,10 @@ import abstraction.MatchFieldEnum;
 import algorithm.Deduplication;
 import com.google.gson.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
+@CrossOrigin
 public class DedupAPIController {
 
     static Set<MatchFieldEnum> subconfig_boolmap_to_mfieldset(JsonObject payload) {
