@@ -2,9 +2,7 @@ package abstraction;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public enum MatchFieldEnum {
     UID {
@@ -14,6 +12,7 @@ public enum MatchFieldEnum {
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_PERSON_UID); }
         @Override public Class getFieldType() { return Long.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() {return "Person";}
     },
     FIRST_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -22,6 +21,7 @@ public enum MatchFieldEnum {
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_FIRST_NAME); }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() {return "Person";}
     },
     LAST_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -30,6 +30,7 @@ public enum MatchFieldEnum {
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_LAST_NAME); }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() {return "Person";}
     },
     SSN {
         @Override public MatchFieldEnum getParent() { return null; }
@@ -38,6 +39,7 @@ public enum MatchFieldEnum {
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() {return "Person";}
     },
     SSN_LAST_FOUR {
         @Override public MatchFieldEnum getParent() { return SSN; }
@@ -51,6 +53,7 @@ public enum MatchFieldEnum {
         }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() {return "Person";}
     };
 
     public abstract MatchFieldEnum getParent();
@@ -59,4 +62,15 @@ public enum MatchFieldEnum {
     public abstract Object getFieldValue(ResultSet rs) throws SQLException;
     public abstract Class getFieldType();
     public abstract boolean isUnknownValue(Object o);
+    public abstract String getTableName();
+
+    public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
+        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
+        for(MatchFieldEnum e : attrs) {
+            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
+            entry.add(e);
+            ret.put(e.getTableName(), entry);
+        }
+        return ret;
+    }
 }

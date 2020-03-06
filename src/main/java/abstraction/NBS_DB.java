@@ -20,11 +20,11 @@ public class NBS_DB {
         conn.setReadOnly(true); //For safety
     }
 
-    public ResultSet getResultSetById(long id) {
+    public ResultSet getResultSetById(long id, String tableName) {
         ResultSet ret;
         try {
             Statement query = conn.createStatement();
-            ret = query.executeQuery("SELECT * from Person where " + Constants.COL_PERSON_UID + " = " + id);
+            ret = query.executeQuery("SELECT * from " + tableName + " where " + Constants.COL_PERSON_UID + " = " + id);
         } catch(SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not query SQL DB to find Person with id " + id);
@@ -33,51 +33,70 @@ public class NBS_DB {
     }
 
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) {
-        Set<String> requiredColumns = new HashSet<>();
-        for (MatchFieldEnum mfield : attrs) {
-            requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
-        }
-        requiredColumns.add(Constants.COL_PERSON_UID);
-
-        ResultSet rs;
-        try {
-            Statement query = conn.createStatement();
-            String q = "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
-                    " from Person where " + Constants.COL_PERSON_UID + " = " + id;
-            rs = query.executeQuery(q);
-            rs.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Could not query SQL DB to find Person with id "
-                    + id + " and rows " + String.join(",", Lists.newArrayList(requiredColumns)));
-        }
+        Set<String> requiredColumns;
+        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
         Map<MatchFieldEnum, Object> ret = new HashMap<>();
-        for(MatchFieldEnum mf : attrs) {
+        ResultSet rs;
+        for(String tableName : tableNameMap.keySet()) {
+            requiredColumns = new HashSet<>();
+            for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
+                requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
+            }
+            requiredColumns.add(Constants.COL_PERSON_UID);
             try {
-                ret.put(mf,  mf.getFieldValue(rs));
-            } catch(SQLException e) {
-                e.printStackTrace();;
-                throw new RuntimeException("Couldn't get value for field " + mf + " in resultset");
+                Statement query = conn.createStatement();
+                String q = "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
+                        " from " + tableName + " where " + Constants.COL_PERSON_UID + " = " + id;
+                rs = query.executeQuery(q);
+                rs.next();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Could not query SQL DB to find Person with id "
+                        + id + " and rows " + String.join(",", Lists.newArrayList(requiredColumns)));
+            }
+            for (MatchFieldEnum mf : tableNameMap.get(tableName)) {
+                try {
+                    ret.put(mf, mf.getFieldValue(rs));
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    ;
+                    throw new RuntimeException("Couldn't get value for field " + mf + " in resultset");
+                }
             }
         }
         return ret;
     }
 
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-
-        Set<String> requiredColumns = new HashSet<>();
-        for (MatchFieldEnum mfield : attrs) {
-            requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
-        }
-        requiredColumns.add(Constants.COL_PERSON_UID);
-
+        Set<String> requiredColumns;
+        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
         ResultSet rs;
+        String queryString = "SELECT ";
+        for(String tableName : tableNameMap.keySet()) {
+            requiredColumns = new HashSet<>();
+            for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
+                for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
+                    requiredColumns.add(tableName + "." + reqiredColumn);
+                }
+            }
+            requiredColumns.add(tableName + "." + Constants.COL_PERSON_UID);
+            queryString += String.join(",", Lists.newArrayList(requiredColumns));
+        }
+        queryString += " from " + String.join(",", Lists.newArrayList(tableNameMap.keySet()));
+        if(tableNameMap.keySet().size() > 1) {
+            //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
+            queryString += " where ";
+            Iterator<String> iter = tableNameMap.keySet().iterator();
+            String primaryTableName = iter.next();
+            while (iter.hasNext()) {
+                //TODO make a map from each table to the name of its Person ID column, use that instead of Constants.COL_PERSON_UID all the time
+                queryString += primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID;
+                if(iter.hasNext()) queryString += " and ";
+            }
+        }
         try {
             Statement query = conn.createStatement();
-            rs = query.executeQuery(
-                    "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
-                            " from Person"
-            );
+            rs = query.executeQuery(queryString);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not connect to and query SQL database");
