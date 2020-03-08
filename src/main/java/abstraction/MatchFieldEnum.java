@@ -23,11 +23,59 @@ public enum MatchFieldEnum {
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
+    FIRST_NAME_SDX {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return Constants.invis_char + "Soundex"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_FIRST_NAME); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
     LAST_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
         @Override public String getHumanReadableName() { return "Last Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_LAST_NAME); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    LAST_NAME_SDX {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return Constants.invis_char + "Soundex"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_FIRST_NAME); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    BIRTH_SEX {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return "Birth Sex"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    DATE_OF_BIRTH {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return "Date of Birth (MM-DD-YYY)"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    DATE_OF_BIRTH2 {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return Constants.invis_char + "Date of Birth (MM-YYY)"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    DATE_OF_BIRTH3 {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return Constants.invis_char + "Date of Birth (YYY)"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject(Constants.COL_SSN); }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
@@ -40,8 +88,34 @@ public enum MatchFieldEnum {
         @Override public boolean isUnknownValue(Object o) { return o == null; }
     },
     SSN_LAST_FOUR {
-        @Override public MatchFieldEnum getParent() { return SSN; }
-        @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return Constants.invis_char + "Last four digits)"; }
+        @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException {
+            // TODO The manual cast to String rather than SSN.getFieldType is a code smell
+            String ssn = (String) SSN.getFieldValue(rs);
+            // TODO This doesn't actually give SSN's last four digits
+            return ssn == null ? null : ssn.substring(0, 1);
+        }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    RACE {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return "Race"; }
+        @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException {
+            // TODO The manual cast to String rather than SSN.getFieldType is a code smell
+            String ssn = (String) SSN.getFieldValue(rs);
+            // TODO This doesn't actually give SSN's last four digits
+            return ssn == null ? null : ssn.substring(0, 1);
+        }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+    },
+    ETH {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return "Ethnicity"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
         @Override public Object getFieldValue(ResultSet rs) throws SQLException {
             // TODO The manual cast to String rather than SSN.getFieldType is a code smell

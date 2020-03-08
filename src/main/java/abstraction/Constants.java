@@ -13,4 +13,5 @@ public class Constants {
     public static final String WEB_SERVER = "localhost";
     public static final String WEB_PORT = "8080";
     public static final String GET_CONFIGS_REQUEST = "/config/";
+    public static final String invis_char = ".........‎‎‎‎‎";
 }

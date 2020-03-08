@@ -33,6 +33,9 @@ public class DedupAPIController {
         int attr_id = 0;
         JsonArray retObject = new JsonArray();
         for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
+            if (mfield == MatchFieldEnum.UID) {
+                continue;
+            }
             JsonObject curr_obj = new JsonObject();
             curr_obj.add("id", new JsonPrimitive(attr_id));
             curr_obj.add("attr_code", new JsonPrimitive(mfield.name()));
