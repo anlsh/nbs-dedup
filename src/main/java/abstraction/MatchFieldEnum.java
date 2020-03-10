@@ -54,6 +54,15 @@ public enum MatchFieldEnum {
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
+    },
+    OTHER_TABLE_NAME {
+        @Override public MatchFieldEnum getParent() { return null; }
+        @Override public String getHumanReadableName() { return "Name but from the person table"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{"first_nm"}; }
+        @Override public Object getFieldValue(ResultSet rs) throws SQLException { return rs.getObject("first_nm"); }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public boolean isUnknownValue(Object o) { return o == null; }
+        @Override public String getTableName() { return "Person_name"; }
     };
 
     public abstract MatchFieldEnum getParent();
@@ -64,13 +73,4 @@ public enum MatchFieldEnum {
     public abstract boolean isUnknownValue(Object o);
     public abstract String getTableName();
 
-    public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
-        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
-        for(MatchFieldEnum e : attrs) {
-            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
-            entry.add(e);
-            ret.put(e.getTableName(), entry);
-        }
-        return ret;
-    }
 }

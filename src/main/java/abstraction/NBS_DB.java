@@ -17,24 +17,13 @@ public class NBS_DB {
                 + ";user=" + username +  ";password=" + password;
 
         conn = DriverManager.getConnection(connectionUrl);
-        conn.setReadOnly(true); //For safety
-    }
-
-    public ResultSet getResultSetById(long id, String tableName) {
-        ResultSet ret;
-        try {
-            Statement query = conn.createStatement();
-            ret = query.executeQuery("SELECT * from " + tableName + " where " + Constants.COL_PERSON_UID + " = " + id);
-        } catch(SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Could not query SQL DB to find Person with id " + id);
-        }
-        return ret;
+        // For safety
+        conn.setReadOnly(true);
     }
 
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) {
         Set<String> requiredColumns;
-        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
+        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
         Map<MatchFieldEnum, Object> ret = new HashMap<>();
         ResultSet rs;
         for(String tableName : tableNameMap.keySet()) {
@@ -68,20 +57,22 @@ public class NBS_DB {
     }
 
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-        Set<String> requiredColumns;
-        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
+
+        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
         ResultSet rs;
+        List<String> colsForEachTableList = new ArrayList<>();
         String queryString = "SELECT ";
         for(String tableName : tableNameMap.keySet()) {
-            requiredColumns = new HashSet<>();
+            Set<String> requiredColumns = new HashSet<>();
             for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
                 for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
                     requiredColumns.add(tableName + "." + reqiredColumn);
                 }
             }
             requiredColumns.add(tableName + "." + Constants.COL_PERSON_UID);
-            queryString += String.join(",", Lists.newArrayList(requiredColumns));
+            colsForEachTableList.add(String.join(",", Lists.newArrayList(requiredColumns)));
         }
+        queryString += String.join(",", colsForEachTableList);
         queryString += " from " + String.join(",", Lists.newArrayList(tableNameMap.keySet()));
         if(tableNameMap.keySet().size() > 1) {
             //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
