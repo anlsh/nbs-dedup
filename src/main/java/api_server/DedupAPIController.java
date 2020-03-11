@@ -29,21 +29,18 @@ public class DedupAPIController {
     @GetMapping("get_dedup_flags")
     public String get_dedup_flags() {
 
-        int attr_id = 0;
         JsonArray retObject = new JsonArray();
         for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
             if (!mfield.isDeduplicableField()) {
                 continue;
             }
             JsonObject curr_obj = new JsonObject();
-            curr_obj.add("id", new JsonPrimitive(attr_id));
             curr_obj.add("attr_code", new JsonPrimitive(mfield.name()));
             curr_obj.add("parent",
                     mfield.getParent() == null ? new JsonNull() : new JsonPrimitive(mfield.getParent().name()));
             curr_obj.add("desc", new JsonPrimitive(mfield.getHumanReadableName()));
 
             retObject.add(curr_obj);
-            attr_id += 1;
         }
         return retObject.toString();
     }
