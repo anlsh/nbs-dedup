@@ -28,11 +28,13 @@ public class DedupAPIController {
 
     @GetMapping("get_dedup_flags")
     public String get_dedup_flags() {
-        // return Stream.of(MatchFieldEnum.values()).map(MatchFieldEnum::name).toArray(String[]::new);
 
         int attr_id = 0;
         JsonArray retObject = new JsonArray();
         for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
+            if (!mfield.isDeduplicableField()) {
+                continue;
+            }
             JsonObject curr_obj = new JsonObject();
             curr_obj.add("id", new JsonPrimitive(attr_id));
             curr_obj.add("attr_code", new JsonPrimitive(mfield.name()));
@@ -88,8 +90,8 @@ public class DedupAPIController {
 
         List<Set<MatchFieldEnum>> config_ls = new ArrayList<>();
 
-        for (int i = 0; i < payload_ls.length; ++i) {
-            config_ls.add(subconfig_boolmap_to_mfieldset(payload_ls[i].getAsJsonObject()));
+        for (JsonObject payload_l : payload_ls) {
+            config_ls.add(subconfig_boolmap_to_mfieldset(payload_l.getAsJsonObject()));
         }
 
         Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(RestServiceApplication.database, config_ls);
