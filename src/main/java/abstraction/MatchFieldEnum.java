@@ -75,7 +75,7 @@ public enum MatchFieldEnum {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
         }
-        return rs.getObject(getTableName() + "." + getRequiredColumnsArray()[0]);
+        return rs.getObject(getTableName() + "_" + getRequiredColumnsArray()[0]);
     };
     public abstract Class getFieldType();
     public abstract boolean isUnknownValue(Object o);

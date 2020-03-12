@@ -35,7 +35,7 @@ public class AuxMapManagerTest {
     }
 
     @Test
-    public void testGetAuxMap() {
+    public void testGetAuxMap() throws SQLException {
         Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.OTHER_TABLE_NAME);
 

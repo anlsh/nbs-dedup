@@ -1,17 +1,14 @@
 package abstraction;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MatchFieldUtils {
-    public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
-        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
-        for(MatchFieldEnum e : attrs) {
-            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
-            entry.add(e);
-            ret.put(e.getTableName(), entry);
+    public static Map<String, Set<String>> getRequiredColumnsForEachTable(Set<MatchFieldEnum> attrs) {
+        Map<String, Set<String>> ret = new HashMap<>();
+        for(MatchFieldEnum mfield : attrs) {
+            Set<String> entry = ret.getOrDefault(mfield.getTableName(), new HashSet<>());
+            entry.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
+            ret.put(mfield.getTableName(), entry);
         }
         return ret;
     }

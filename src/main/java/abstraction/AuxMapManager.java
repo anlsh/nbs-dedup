@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
 import java.io.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +80,7 @@ public class AuxMapManager {
         File auxMapfile = new File(mfieldSetToFilename(attrs));
         auxMapfile.delete();
     }
-    public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
+    public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs, boolean delete_existing) throws SQLException {
         if (delete_existing) {
             deleteAuxMap(attrs);
         }
@@ -91,11 +92,11 @@ public class AuxMapManager {
             return aux;
         }
     }
-    public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs) {
+    public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs) throws SQLException {
         return getAuxMap(db, attrs, false);
     }
 
-    public static void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) {
+    public static void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
 
         AuxMap map = getAuxMap(db, attrs);
 
@@ -110,7 +111,7 @@ public class AuxMapManager {
         saveAuxMapToFile(map);
     }
 
-    public static void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) {
+    public static void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
 
         AuxMap map = getAuxMap(db, attrs);
 
