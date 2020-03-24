@@ -1,9 +1,19 @@
 package abstraction;
 
+import java.sql.ResultSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
+
+import java.sql.SQLException;
+import java.nio.channels.FileLock;
+
+import hashing.HashUtils;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.*;
@@ -11,7 +21,7 @@ import java.util.*;
 public class AuxMapManager {
 
     private static String DATA_ROOT = "/tmp/aux-maps/";
-    private static String AUXMAP_MANAGER = "/tmp/aux-maps/manager.map";
+    private static String AUXMAP_MANAGER = "/tmp/aux-maps/manager.json";
 
     public static String getDataRoot() { return DATA_ROOT; }
     // TODO Make the setter for this do proper validation on directory name
@@ -26,15 +36,16 @@ public class AuxMapManager {
         for (MatchFieldEnum mfield : attrList) {
             attributes_str += mfield.toString() + "_";
         }
-        return attributes_str;
+        return Integer.toString(attributes_str.hashCode());
     }
 
-    private static Map<String, Set<MatchFieldEnum>> getOrCreateMapManager(){
+    private static JSONObject getOrCreateMapManager(){
+
         File managerFile = new File(AUXMAP_MANAGER);
         if (managerFile.exists()){
             return loadManagerFromFile();
         } else {
-            HashMap<String, Set<MatchFieldEnum>> manager = new HashMap<String, Set<MatchFieldEnum>>();
+            JSONObject manager = new JSONObject();
             return manager;
         }
     }
@@ -49,7 +60,7 @@ public class AuxMapManager {
         return auxMapFile.exists();
     }
 
-    public synchronized static void saveAuxMapToFile(AuxMap aux) {
+    public static void saveAuxMapToFile(AuxMap aux) {
 
         deleteAuxMap(aux.attrs);
 
@@ -59,10 +70,15 @@ public class AuxMapManager {
                 auxMapFile.getParentFile().mkdirs();
             }
 
+
             FileOutputStream fos = new FileOutputStream(auxMapFile);
+            FileLock lock = fos.getChannel().lock();   //blocks until obtained
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(aux);
             oos.close();
+            lock.release();
+
+            hookEditManager(aux);
         } catch (Exception e) {
             // TODO Exception handling
             e.printStackTrace();
@@ -70,19 +86,18 @@ public class AuxMapManager {
         }
     }
 
-    public synchronized static void saveManagerToFile(Map<String, Set<MatchFieldEnum>> manager){
+    public synchronized static void saveManagerToFile(JSONObject manager){
         deleteAuxMapManager();
 
         try {
             File managerFile = new File(AUXMAP_MANAGER);
+            FileWriter managerFileWriter = new FileWriter(managerFile);
             if (managerFile.getParentFile() != null){
                 managerFile.getParentFile().mkdirs();
             }
 
-            FileOutputStream fos = new FileOutputStream(managerFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(manager);
-            oos.close();
+            managerFileWriter.write(manager.toJSONString());
+            managerFileWriter.close();
 
         } catch (Exception e){
             e.printStackTrace();
@@ -90,15 +105,31 @@ public class AuxMapManager {
         }
     }
 
-    public static Map<String, Set<MatchFieldEnum>> loadManagerFromFile(){
-        try {
-            FileInputStream fin = new FileInputStream(AUXMAP_MANAGER);
-            ObjectInputStream ois = new ObjectInputStream(fin);
-            HashMap<String, Set<MatchFieldEnum>> manager = (HashMap<String, Set<MatchFieldEnum>>) ois.readObject();
-            ois.close();
+    public static void hookEditManager(AuxMap auxMap){
+        JSONObject manager = getOrCreateMapManager();
+        String fileName = mfieldSetToFilename(auxMap.attrs);
+        JSONArray attrString = new JSONArray();
+        attrString.addAll(auxMap.attrs);
+
+        manager.put(fileName, attrString);
+        saveManagerToFile(manager);
+    }
+
+    public static JSONObject loadManagerFromFile(){
+        try (FileReader reader = new FileReader(AUXMAP_MANAGER))
+        {
+            JSONParser jsonParser = new JSONParser();
+            JSONObject manager = (JSONObject) jsonParser.parse(reader);
+
             return manager;
-        } catch (Exception e) {
-            // TODO Exception handling
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        } catch (ParseException e) {
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -108,9 +139,11 @@ public class AuxMapManager {
 
         try {
             FileInputStream fin = new FileInputStream(mfieldSetToFilename(attrs));
+            FileLock lock = fin.getChannel().lock();
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
+            lock.release();
             return aux;
         } catch (Exception e) {
             // TODO Exception handling
@@ -137,10 +170,9 @@ public class AuxMapManager {
             return loadAuxMapFromFile(attrs);
         } else {
             AuxMap aux = db.constructAuxMap(attrs);
-            Map<String, Set<MatchFieldEnum>> manager = getOrCreateMapManager();
+
+            // Whenever an auxmap is newly created update the manager
             saveAuxMapToFile(aux);
-            manager.put(mfieldSetToFilename(attrs), attrs);
-            saveManagerToFile(manager);
             return aux;
         }
     }
@@ -148,28 +180,83 @@ public class AuxMapManager {
         return getAuxMap(db, attrs, false);
     }
 
-    public static void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) {
+    public static void hookAddRecord(NBS_DB db, ResultSet rs, Set<MatchFieldEnum> attrs) {
 
         AuxMap map = getAuxMap(db, attrs);
 
-        map.getIdToHashMap().put(id, hash);
-        if (map.getHashToIdMap().containsKey(hash)){
-            map.getHashToIdMap().get(hash).add(id);
-        }
-        else {
-            map.getHashToIdMap().put(hash, Sets.newHashSet(id));
+        try {
+            while (rs.next()) {
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+
+                boolean include_entry = true;
+
+                for (MatchFieldEnum mfield : attrs) {
+                    Object mfield_val = mfield.getFieldValue(rs);
+                    if (mfield.isUnknownValue(mfield_val)) {
+                        include_entry = false;
+                        break;
+                    }
+                    attr_map.put(mfield, mfield.getFieldValue(rs));
+                }
+
+                if (!include_entry) {
+                    continue;
+                } else {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                    HashCode hash = HashUtils.hashFields(attr_map);
+
+                    map.getIdToHashMap().put(record_id, hash);
+
+                    Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
+                    if (idsWithSameHash != null) {
+                        idsWithSameHash.add(record_id);
+                    } else {
+                        map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            // TODO Exception Handling
+            e.printStackTrace();
+            throw new RuntimeException("Error while trying to scan database entries");
         }
 
         saveAuxMapToFile(map);
     }
 
-    public static void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) {
+    public static void hookRemoveRecord(NBS_DB db, ResultSet rs, Set<MatchFieldEnum> attrs) {
 
         AuxMap map = getAuxMap(db, attrs);
 
-        map.getIdToHashMap().remove(id);
-        if (map.getHashToIdMap().containsKey(hash)){
-            map.getHashToIdMap().get(hash).remove(id);
+        try {
+            while (rs.next()) {
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+
+                boolean include_entry = true;
+
+                for (MatchFieldEnum mfield : attrs) {
+                    Object mfield_val = mfield.getFieldValue(rs);
+                    if (mfield.isUnknownValue(mfield_val)) {
+                        include_entry = false;
+                        break;
+                    }
+                    attr_map.put(mfield, mfield.getFieldValue(rs));
+                }
+
+                if (!include_entry) {
+                    continue;
+                } else {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                    HashCode hash = HashUtils.hashFields(attr_map);
+
+                    map.getIdToHashMap().remove(record_id);
+                    map.getHashToIdMap().remove(hash);
+                }
+            }
+        } catch (SQLException e) {
+            // TODO Exception Handling
+            e.printStackTrace();
+            throw new RuntimeException("Error while trying to scan database entries");
         }
         saveAuxMapToFile(map);
     }
