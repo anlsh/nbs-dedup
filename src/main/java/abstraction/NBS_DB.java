@@ -13,11 +13,12 @@ public class NBS_DB {
     public Connection conn;
 
     public NBS_DB(String server, int port, String dbName, String username, String password) throws SQLException {
-        String connectionUrl = "jdbc:sqlserver://" + server + ":" + port + ";databaseName=" + dbName
-                + ";user=" + username +  ";password=" + password;
-
-        conn = DriverManager.getConnection(connectionUrl);
-        // For safety
+        conn = DriverManager.getConnection(
+                "jdbc:sqlserver://" + server + ":" + port
+                        + ";databaseName=" + dbName
+                        + ";user=" + username
+                        +  ";password=" + password
+        );
         conn.setReadOnly(true);
     }
 
@@ -34,16 +35,32 @@ public class NBS_DB {
         return ret;
     }
 
-    private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long specific_id) {
+    /** Generates an SQL query to retrieve the columns for any given set of match fields and (potentially) any specific
+     * id.
+     *
+     * If uid is null, then returns a ResultSet containing the needed columns for every single entry in the
+     * database. If it is non-null, then the ResultSet only contains the information concerning the given uid
+     * @param attrs The set of MatchFields to deduplicate on
+     * @param uid The specific person ID to retrieve information for, or null if information for all IDs should be
+     *            retrieved
+     * @return
+     */
+    private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long uid) {
         Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
         List<String> tableColumns = new ArrayList<>();
         String queryString = "SELECT ";
         for(String tableName : tableNameMap.keySet()) {
             List<String> currTableColumns = new ArrayList<>();
-            currTableColumns.add((tableName + "." + Constants.COL_PERSON_UID) + " as " + (tableName + "__" + Constants.COL_PERSON_UID));
+            currTableColumns.add(
+                    MatchFieldUtils.getSQLQualifiedColName(tableName, Constants.COL_PERSON_UID)
+                    + " as " + MatchFieldUtils.getAliasedColName(tableName, Constants.COL_PERSON_UID)
+            );
             for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
                 for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
-                    currTableColumns.add((tableName + "." + reqiredColumn) + " as " + (tableName + "__" + reqiredColumn));
+                    currTableColumns.add(
+                            MatchFieldUtils.getSQLQualifiedColName(tableName, reqiredColumn)
+                            + MatchFieldUtils.getAliasedColName(tableName, reqiredColumn)
+                    );
                 }
             }
             tableColumns.add(String.join(", ", currTableColumns));
@@ -52,13 +69,13 @@ public class NBS_DB {
         queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
 
         // TODO Don't hardcode the primary table name!
+        // If only fetching for a single id, add that constraint to the query
         List<String> where_clauses = new ArrayList<>();
-        if (specific_id != null) {
-            where_clauses.add("Person." + Constants.COL_PERSON_UID + " = " + specific_id);
+        if (uid != null) {
+            where_clauses.add("Person." + Constants.COL_PERSON_UID + " = " + uid);
         }
+        // Align the columns from each table by the person_uid column.
         if(tableNameMap.keySet().size() > 1) {
-            //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
-            // queryString += " where ";
             Iterator<String> iter = tableNameMap.keySet().iterator();
             String primaryTableName = iter.next();
             while (iter.hasNext()) {
@@ -73,7 +90,11 @@ public class NBS_DB {
         return queryString;
     }
 
-    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
+    /** Given a set of match fields, traverse the database and create a fresh AuxMap object.
+     * @param attrs
+     * @return
+     */
+    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs, int num_threads) {
 
         ResultSet rs;
         String queryString = getSQLQueryForAllEntries(attrs, null);
@@ -89,8 +110,7 @@ public class NBS_DB {
         Map<Long, HashCode> idToHash = new HashMap<>();
         Map<HashCode, Set<Long>> hashToIDs = new HashMap<>();
 
-        // TODO This methodology is sourced from https://stackoverflow.com/questions/7507121/efficient-way-to-handle-resultset-in-java
-        // But should be abstracted using a standard library like DBUtils or MapListHandler
+        List<Map<MatchFieldEnum, Object>> dbD= new LinkedList<>();
 
         try {
             while (rs.next()) {
@@ -128,5 +148,8 @@ public class NBS_DB {
         }
 
         return new AuxMap(attrs, idToHash, hashToIDs);
+    }
+    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
+        return constructAuxMap(attrs, 1);
     }
 }

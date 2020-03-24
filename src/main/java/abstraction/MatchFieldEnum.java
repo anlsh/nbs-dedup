@@ -76,12 +76,17 @@ public enum MatchFieldEnum {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
         }
-        return rs.getObject(getTableName() + "__" + getRequiredColumnsArray()[0]);
+        return rs.getObject(MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0]));
     };
     public abstract Class getFieldType();
     public abstract boolean isUnknownValue(Object o);
     public abstract String getTableName();
 
+    /** Given a set of matchfieldenums, generate a map from required tables in the database to attributes depending
+     * on them
+     * @param attrs
+     * @return
+     */
     public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
         Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
         for(MatchFieldEnum e : attrs) {
