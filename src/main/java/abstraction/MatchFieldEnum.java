@@ -4,7 +4,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+/**
+ * An enum where each value corresponds to a flag which can be matched on: for instance first name, or last name,
+ * or SSN, or the last four digits of an SSN, or anything else.
+ */
 public enum MatchFieldEnum {
+    // Match flags. Each match flag must implement a certain set of functions, which are declared at the end of this
+    // class. Implementing the functions here unfortunately leads to a very long file, but gives a compile-time
+    // guarantee that every flag implements everything that it needs to.
     UID {
         @Override public MatchFieldEnum getParent() { return null; }
 
@@ -63,14 +70,46 @@ public enum MatchFieldEnum {
         @Override public String getTableName() { return "Person_name"; }
     };
 
+    /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
+     *  for others: at the moment the only field which it doesn't make sense to deduplicate on is UID
+     * @return
+     */
     public boolean isDeduplicableField() {
-        // Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
-        // for others: at the moment the only field which it doesn't make sense to deduplicate on is UID
         return true;
     }
+
+    /** Return null if the attribute in question is "top-level," (eg SSN), or the parent MatchFieldEnum if not
+     *  (eg last four digits of an SSN
+     * @return
+     */
     public abstract MatchFieldEnum getParent();
+
+    /** Returns the name to be displayed for this MatchFieldEnum in the user-interface
+     * @return
+     */
     public abstract String getHumanReadableName();
+
+    /** Returns the name of the table on which this attribute depends. Each attribute can only depend on a single table
+     * at the moment, as we see no reason to augment this functionality.
+     * @return
+     */
+    public abstract String getTableName();
+
+    /** Returns a list of columns which the attribute depends on *within its table*. So for example the FIRST_NM
+     * flag which depends on the "first_nm" column from the "Person_name" table would return ["first_nm"]
+     * @return
+     */
     public abstract String[] getRequiredColumnsArray();
+
+    /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
+     * value.
+     *
+     * As attributes which essentially act as pass-throughs for a single column are very common, the default
+     * implementation performs this operation.
+     * @param rs
+     * @return
+     * @throws SQLException
+     */
     public Object getFieldValue(ResultSet rs) throws SQLException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
@@ -78,22 +117,15 @@ public enum MatchFieldEnum {
         }
         return rs.getObject(MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0]));
     };
-    public abstract Class getFieldType();
-    public abstract boolean isUnknownValue(Object o);
-    public abstract String getTableName();
 
-    /** Given a set of matchfieldenums, generate a map from required tables in the database to attributes depending
-     * on them
-     * @param attrs
+    /** Returns the underlying type of the attribute: should be suitable as a cast target for the corresponding
+     * value of getFieldValue()
+     *
+     * Possibly multiple-valued attributes should be treated the same as single-valued ones. For instance, the return
+     * value for the FIRST_NAME attribute is String, even though it should be more like List<String> since people can
+     * have multiple names
      * @return
      */
-    public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
-        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
-        for(MatchFieldEnum e : attrs) {
-            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
-            entry.add(e);
-            ret.put(e.getTableName(), entry);
-        }
-        return ret;
-    }
+    public abstract Class getFieldType();
+    public abstract boolean isUnknownValue(Object o);
 }

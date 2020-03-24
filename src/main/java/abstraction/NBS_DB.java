@@ -48,7 +48,7 @@ public class NBS_DB {
      * @return
      */
     private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long uid) {
-        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
+        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
         List<String> tableColumns = new ArrayList<>();
         String queryString = "SELECT ";
         for(String tableName : tableNameMap.keySet()) {
@@ -94,6 +94,7 @@ public class NBS_DB {
 
     /** Given a set of match fields, traverse the database and create a fresh AuxMap object.
      * @param attrs
+     * @param num_threads The number of worker threads used to hash database entries.
      * @return
      */
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs, int num_threads) {

@@ -1,5 +1,10 @@
 package abstraction;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 public class MatchFieldUtils {
 
     /**
@@ -24,5 +29,20 @@ public class MatchFieldUtils {
      */
     public static String getAliasedColName(String tableName, String columnName) {
         return tableName + "__" + columnName;
+    }
+
+    /** Given a set of matchfieldenums, generate a map from required tables in the database to attributes depending
+     * on them
+     * @param attrs
+     * @return
+     */
+    public static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
+        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
+        for(MatchFieldEnum e : attrs) {
+            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
+            entry.add(e);
+            ret.put(e.getTableName(), entry);
+        }
+        return ret;
     }
 }
