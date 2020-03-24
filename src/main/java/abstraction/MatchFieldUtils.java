@@ -1,11 +1,18 @@
 package abstraction;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MatchFieldUtils {
+
+    private static List<MatchFieldEnum> sortedMfields = null;
+    public static List<MatchFieldEnum> getSortedMfields() {
+        if (sortedMfields == null) {
+            List<MatchFieldEnum> thingy = Arrays.asList(MatchFieldEnum.values());
+            Collections.sort(thingy);
+            sortedMfields = thingy;
+        }
+        return sortedMfields;
+    }
 
     /**
      * Given the name of a table and a column within that table, return a fully-qualified name suitable for use in
