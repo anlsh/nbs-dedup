@@ -106,21 +106,22 @@ public class NBS_DB {
     }
 
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-        Set<String> requiredColumns;
         Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldEnum.getTableNameMap(attrs);
         ResultSet rs;
+        List<String> tableColumns = new ArrayList<>();
         String queryString = "SELECT ";
         for(String tableName : tableNameMap.keySet()) {
-            requiredColumns = new HashSet<>();
+            List<String> currTableColumns = new ArrayList<>();
+            currTableColumns.add((tableName + "." + Constants.COL_PERSON_UID) + " as " + (tableName + "__" + Constants.COL_PERSON_UID));
             for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
                 for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
-                    requiredColumns.add(tableName + "." + reqiredColumn);
+                    currTableColumns.add((tableName + "." + reqiredColumn) + " as " + (tableName + "__" + reqiredColumn));
                 }
             }
-            requiredColumns.add(tableName + "." + Constants.COL_PERSON_UID);
-            queryString += String.join(",", Lists.newArrayList(requiredColumns));
+            tableColumns.add(String.join(", ", currTableColumns));
         }
-        queryString += " from " + String.join(",", Lists.newArrayList(tableNameMap.keySet()));
+        queryString += String.join(", ", tableColumns);
+        queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
         if(tableNameMap.keySet().size() > 1) {
             //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
             queryString += " where ";
