@@ -1,4 +1,5 @@
 package api_server;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -8,8 +9,10 @@ import abstraction.MatchFieldEnum;
 import algorithm.Deduplication;
 import com.google.gson.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
+@CrossOrigin
 public class DedupAPIController {
 
     static Set<MatchFieldEnum> subconfig_boolmap_to_mfieldset(JsonObject payload) {
@@ -26,26 +29,25 @@ public class DedupAPIController {
 
     @GetMapping("get_dedup_flags")
     public String get_dedup_flags() {
-        // return Stream.of(MatchFieldEnum.values()).map(MatchFieldEnum::name).toArray(String[]::new);
 
-        int attr_id = 0;
         JsonArray retObject = new JsonArray();
         for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
+            if (!mfield.isDeduplicableField()) {
+                continue;
+            }
             JsonObject curr_obj = new JsonObject();
-            curr_obj.add("id", new JsonPrimitive(attr_id));
             curr_obj.add("attr_code", new JsonPrimitive(mfield.name()));
             curr_obj.add("parent",
                     mfield.getParent() == null ? new JsonNull() : new JsonPrimitive(mfield.getParent().name()));
             curr_obj.add("desc", new JsonPrimitive(mfield.getHumanReadableName()));
 
             retObject.add(curr_obj);
-            attr_id += 1;
         }
         return retObject.toString();
     }
 
     @PostMapping("create_subconfig")
-    public Boolean create_subconfig(@RequestParam(value = "data") String data) {
+    public Boolean create_subconfig(@RequestParam(value = "data") String data) throws SQLException {
 
         // Working with arbitrary data kinda sucks, or maybe I'm just dumb.
         // See https://www.quora.com/Can-I-fetch-a-JSON-object-in-my-spring-controller-without-using-a-model-object
@@ -75,7 +77,7 @@ public class DedupAPIController {
     }
 
     @PostMapping("deduplicate")
-    public String deduplicate(@RequestParam(value = "data") String data) {
+    public String deduplicate(@RequestParam(value = "data") String data) throws SQLException {
         // Apparently the square brackets aren't allowed in posts?
         // https://stackoverflow.com/questions/11944410/passing-array-in-get-for-a-rest-call
 
@@ -86,8 +88,8 @@ public class DedupAPIController {
 
         List<Set<MatchFieldEnum>> config_ls = new ArrayList<>();
 
-        for (int i = 0; i < payload_ls.length; ++i) {
-            config_ls.add(subconfig_boolmap_to_mfieldset(payload_ls[i].getAsJsonObject()));
+        for (JsonObject payload_l : payload_ls) {
+            config_ls.add(subconfig_boolmap_to_mfieldset(payload_l.getAsJsonObject()));
         }
 
         Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(RestServiceApplication.database, config_ls);

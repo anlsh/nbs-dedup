@@ -17,7 +17,45 @@ public class NBS_DB {
                 + ";user=" + username +  ";password=" + password;
 
         conn = DriverManager.getConnection(connectionUrl);
-        conn.setReadOnly(true); //For safety
+        // For safety
+        conn.setReadOnly(true);
+    }
+
+    private static List<String> getQueryColumnStrings(String prefix, Set<String> NeededColumns) {
+        List<String> neededCols = new ArrayList<>();
+        for (String colName : NeededColumns) {
+            neededCols.add(colName + " as " + (prefix + "_" + colName));
+        }
+        return neededCols;
+    }
+
+    public String sqlFetchColumnsForEachTable(Map<String, Set<String>> tableToNeededColumns) {
+
+        String queryString = "SELECT "; // + String.join(", ", neededCols);
+        List<String> colsFromEachTableString = new ArrayList<>();
+        for (String tableName : tableToNeededColumns.keySet()) {
+            colsFromEachTableString.add(String.join(", ",
+                    getQueryColumnStrings(tableName, tableToNeededColumns.get(tableName))) + " from " + tableName);
+        }
+        queryString += String.join(", ", colsFromEachTableString);
+
+        if(tableToNeededColumns.keySet().size() > 1) {
+            List<String> alignTables = new ArrayList<>();
+            //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
+            Iterator<String> iter = tableToNeededColumns.keySet().iterator();
+            String primaryTableName = iter.next();
+            while (iter.hasNext()) {
+                //TODO make a map from each table to the name of its Person ID column, use that instead of Constants.COL_PERSON_UID all the time
+                alignTables.add(primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID);
+            }
+
+            queryString += " where " + String.join(" and ", alignTables);
+        }
+        return queryString;
+    }
+
+    public String sqlFetchColumnsForUID(long uid, Map<String, Set<String>> tableToNeededColumns) {
+        return sqlFetchColumnsForEachTable(tableToNeededColumns) + " and " + Constants.COL_PERSON_UID + " = " + uid;
     }
 
     public ResultSet getResultSetById(long id, String tableName) {
