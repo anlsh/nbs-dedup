@@ -182,7 +182,6 @@ public class NBS_DB {
         return new AuxMap(attrs, idToHash, hashToIDs);
     }
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-        // TODO MAGIC NUMBER
         return constructAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
     }
 }
