@@ -49,7 +49,7 @@ public class AuxMapManagerTest {
 
         long MAGIC_KEY = 7;
 
-        Map<Long, HashCode> dummyData = new HashMap<>();
+        Map<Long, Set<HashCode>> dummyData = new HashMap<>();
         dummyData.put(MAGIC_KEY, null);
         Set<MatchFieldEnum> empty = new HashSet<>();
         AuxMap emptyAux = new AuxMap(empty, dummyData, null);

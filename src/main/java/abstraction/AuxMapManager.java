@@ -1,6 +1,5 @@
 package abstraction;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
@@ -96,29 +95,29 @@ public class AuxMapManager {
         return getAuxMap(db, attrs, false);
     }
 
-    public static void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
-
-        AuxMap map = getAuxMap(db, attrs);
-
-        map.getIdToHashMap().put(id, hash);
-        if (map.getHashToIdMap().containsKey(hash)){
-            map.getHashToIdMap().get(hash).add(id);
-        }
-        else {
-            map.getHashToIdMap().put(hash, Sets.newHashSet(id));
-        }
-
-        saveAuxMapToFile(map);
-    }
-
-    public static void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
-
-        AuxMap map = getAuxMap(db, attrs);
-
-        map.getIdToHashMap().remove(id);
-        if (map.getHashToIdMap().containsKey(hash)){
-            map.getHashToIdMap().get(hash).remove(id);
-        }
-        saveAuxMapToFile(map);
-    }
+//    public static void hookAddRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
+//
+//        AuxMap map = getAuxMap(db, attrs);
+//
+//        map.getIdToHashMap().put(id, hash);
+//        if (map.getHashToIdMap().containsKey(hash)){
+//            map.getHashToIdMap().get(hash).add(id);
+//        }
+//        else {
+//            map.getHashToIdMap().put(hash, Sets.newHashSet(id));
+//        }
+//
+//        saveAuxMapToFile(map);
+//    }
+//
+//    public static void hookRemoveRecord(NBS_DB db, Set<MatchFieldEnum> attrs, Long id, HashCode hash) throws SQLException {
+//
+//        AuxMap map = getAuxMap(db, attrs);
+//
+//        map.getIdToHashMap().remove(id);
+//        if (map.getHashToIdMap().containsKey(hash)){
+//            map.getHashToIdMap().get(hash).remove(id);
+//        }
+//        saveAuxMapToFile(map);
+//    }
 }

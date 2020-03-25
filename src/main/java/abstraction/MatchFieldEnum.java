@@ -50,11 +50,15 @@ public enum MatchFieldEnum {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
-        @Override public Object getFieldValue(ResultSet rs) throws SQLException {
+        @Override public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
             // TODO The manual cast to String rather than SSN.getFieldType is a code smell
-            String ssn = (String) SSN.getFieldValue(rs);
-            // TODO This doesn't actually give SSN's last four digits
-            return ssn == null ? null : ssn.substring(0, 1);
+            Set<Object> lastFours = new HashSet<>();
+            for (Object ssn : SSN.getFieldValue(rs)) {
+                String ssnStr = (String) ssn;
+                // TODO This doesn't actually give SSN's last four digits
+                lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
+            }
+            return lastFours;
         }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
@@ -101,8 +105,35 @@ public enum MatchFieldEnum {
      */
     public abstract String[] getRequiredColumnsArray();
 
+    /** Detect if the attribute referred to by "this" is multiply-valued for the current row in the ResultSet
+     * @param rs
+     * @return
+     * @throws SQLException
+     */
+    public boolean isMultipleValued(ResultSet rs) throws SQLException {
+        if (getRequiredColumnsArray().length != 1) {
+            throw new RuntimeException("Using default isMultipleValued to retrieve information " +
+                    "depending on multiple fields");
+        }
+        Object tableObj = rs.getObject(
+                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+        );
+        if (Collection.class.isInstance(tableObj)) {
+            return true;
+        } else if (this.getFieldType().isInstance(tableObj)) {
+            return false;
+        } else {
+            throw new RuntimeException("The object " + tableObj.toString() + " is neither a " + this.getFieldType()
+                    + " nor a List<" + this.getFieldType() + ">");
+        }
+    }
+
     /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
      * value.
+     *
+     * To account for attributes which can have multiple values, this function must always return a list consisting
+     * of all possible values for the attribute- even if the attribute happens to be singly-valued for the given row
+     * in the ResultSet.
      *
      * As attributes which essentially act as pass-throughs for a single column are very common, the default
      * implementation performs this operation.
@@ -110,12 +141,21 @@ public enum MatchFieldEnum {
      * @return
      * @throws SQLException
      */
-    public Object getFieldValue(ResultSet rs) throws SQLException {
+    public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
         }
-        return rs.getObject(MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0]));
+        Object tableObj = rs.getObject(
+                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+        );
+        if (isMultipleValued(rs)) {
+            return new HashSet<>((Collection) tableObj);
+        } else {
+            HashSet ret = new HashSet();
+            ret.add(tableObj);
+            return ret;
+        }
     };
 
     /** Returns the underlying type of the attribute: should be suitable as a cast target for the corresponding

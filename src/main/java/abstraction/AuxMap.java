@@ -8,10 +8,10 @@ import java.util.*;
 public class AuxMap implements Serializable {
 
     Set<MatchFieldEnum> attrs;
-    Map<Long, HashCode> idToHashMap;
+    Map<Long, Set<HashCode>> idToHashMap;
     Map<HashCode, Set<Long>> hashToIdMap;
 
-    public AuxMap(Set<MatchFieldEnum> attrs, Map<Long, HashCode> idToHash, Map<HashCode, Set<Long>> hashToId) {
+    public AuxMap(Set<MatchFieldEnum> attrs, Map<Long, Set<HashCode>> idToHash, Map<HashCode, Set<Long>> hashToId) {
         this.attrs = attrs;
         this.idToHashMap = idToHash;
         this.hashToIdMap = hashToId;
@@ -21,7 +21,7 @@ public class AuxMap implements Serializable {
         return hashToIdMap;
     }
 
-    public Map<Long, HashCode> getIdToHashMap() {
+    public Map<Long, Set<HashCode>> getIdToHashMap() {
         return idToHashMap;
     }
 }

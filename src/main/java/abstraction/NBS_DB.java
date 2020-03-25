@@ -7,8 +7,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
+import utils.ConcurrentSet;
 
 public class NBS_DB {
 
@@ -112,19 +114,15 @@ public class NBS_DB {
         }
 
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
-        Map<Long, HashCode> idToHash = new ConcurrentHashMap<>();
-        // The sets referred to in the type signature below must of course be synchronized. However, Java does not seem
-        // to have a "concurrent set" type, although they can in fact be created by "deriving" from a Hash Map.
-        // We take that approach below https://better-coding.com/solved-how-to-create-concurrenthashset-before-and-after-java-8/
+        Map<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
+        // The sets referred to in the type signature below are in fact synchronized.
         Map<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
         class HashDatabaseEntry implements Runnable {
-
             /**
              * Represents a job which will calculate the hash of the given attribute map and update the relevant
              * maps for the final AuxMap
              */
-
             Map<MatchFieldEnum, Object> attr_map;
             long uid;
             HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
@@ -135,16 +133,19 @@ public class NBS_DB {
             @Override
             public void run() {
                 HashCode hash = HashUtils.hashFields(attr_map);
-                idToHash.put(uid, hash);
+
+                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
+                if (currentIdToHashes != null) {
+                    currentIdToHashes.add(hash);
+                } else {
+                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
+                }
 
                 Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
                 if (idsWithSameHash != null) {
                     idsWithSameHash.add(uid);
                 } else {
-                    Map<Long, Boolean> myMap = new ConcurrentHashMap<>();
-                    Set<Long> concurrentSet = Collections.newSetFromMap(myMap);
-                    concurrentSet.add(uid);
-                    hashToIDs.put(hash, concurrentSet);
+                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
                 }
             }
         }
@@ -155,22 +156,29 @@ public class NBS_DB {
         // its job queue. Otherwise, this function may essentially load the entire database into RAM
         try {
             while (rs.next()) {
-                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
+                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
 
                 boolean include_entry = true;
 
-                for (MatchFieldEnum mfield : attrs) {
+                for (MatchFieldEnum mfield : attrsAsList) {
                     Object mfield_val = mfield.getFieldValue(rs);
                     if (mfield.isUnknownValue(mfield_val)) {
                         include_entry = false;
                         break;
                     }
-                    attr_map.put(mfield, mfield.getFieldValue(rs));
+                    valuesList.add(mfield.getFieldValue(rs));
                 }
 
                 if (include_entry) {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
-                    executor.execute(new HashDatabaseEntry(record_id, attr_map));
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
+                    for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
+                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                        for (int i = 0; i < attrs.size(); ++i) {
+                            attr_map.put(attrsAsList.get(i), specific_vals.get(i));
+                            executor.execute(new HashDatabaseEntry(record_id, attr_map));
+                        }
+                    }
                 }
             }
             executor.shutdown();
