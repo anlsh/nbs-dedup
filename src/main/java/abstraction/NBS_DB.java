@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.fasterxml.jackson.databind.deser.DataFormatReaders;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
@@ -90,6 +91,92 @@ public class NBS_DB {
         }
 
         return queryString;
+    }
+
+    //Almost but not quite the same as constructAuxMap
+    public ProductAuxMap constructProductAuxMap(final Set<MatchFieldEnum> attrs, int num_threads) {
+        ResultSet rs;
+        String queryString = getSQLQueryForAllEntries(attrs, null);
+
+        try {
+            Statement query = conn.createStatement();
+            rs = query.executeQuery(queryString);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Could not connect to and query SQL database");
+        }
+
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
+
+        Map<Long, Set<HashCode>> idToHashes = new ConcurrentHashMap<>();
+        Map<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
+
+        class HashDatabaseEntry implements Runnable {
+            Set<Map<MatchFieldEnum, Object>> attr_maps;
+            long uid;
+
+            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
+                this(uid, MatchFieldUtils.explodeAttrMap(attr_map));
+            }
+
+            HashDatabaseEntry(long uid, Set<Map<MatchFieldEnum, Object>> attr_maps) {
+                this.uid = uid;
+                this.attr_maps = attr_maps;
+            }
+
+            @Override
+            public void run() {
+                for(Map<MatchFieldEnum, Object> attr_map : attr_maps) {
+                    HashCode hash = HashUtils.hashFields(attr_map);
+                    Set<HashCode> s = idToHashes.getOrDefault(uid, new HashSet<>());
+                    s.add(hash);
+                    idToHashes.put(uid, s);
+
+                    Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                    if(idsWithSameHash != null) {
+                        idsWithSameHash.add(uid);
+                    } else {
+                        Map<Long, Boolean> myMap = new ConcurrentHashMap<>();
+                        Set<Long> concurrentSet = Collections.newSetFromMap(myMap);
+                        concurrentSet.add(uid);
+                        hashToIDs.put(hash, concurrentSet);
+                    }
+                }
+            }
+        }
+
+        try {
+            while (rs.next()) {
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+
+                boolean include_entry = true;
+
+                for (MatchFieldEnum mfield : attrs) {
+                    Object mfield_val = mfield.getFieldValue(rs);
+                    if (mfield.isUnknownValue(mfield_val)) {
+                        include_entry = false;
+                        break;
+                    }
+                    attr_map.put(mfield, mfield.getFieldValue(rs));
+                }
+
+                if (include_entry) {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                    executor.execute(new HashDatabaseEntry(record_id, attr_map));
+                }
+            }
+            executor.shutdown();
+        } catch (SQLException e) {
+            // TODO Exception Handling
+            e.printStackTrace();
+            throw new RuntimeException("Error while trying to scan database entries");
+        }
+
+        return new ProductAuxMap(attrs, idToHashes, hashToIDs);
+    }
+    public ProductAuxMap constructProductAuxMap(final Set<MatchFieldEnum> attrs) {
+        // TODO MAGIC NUMBER
+        return constructProductAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
     }
 
     /** Given a set of match fields, traverse the database and create a fresh AuxMap object.

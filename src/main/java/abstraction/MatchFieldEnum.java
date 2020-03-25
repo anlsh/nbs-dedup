@@ -81,6 +81,10 @@ public enum MatchFieldEnum {
     public abstract Class getFieldType();
     public abstract boolean isUnknownValue(Object o);
     public abstract String getTableName();
+    public boolean isMultiField() { return false; }
+    public MatchFieldEnum explodedFieldName() { return null; } //Returns the name of the field that this field gets exploded into (only for multifields)
+    public boolean isExplodedField() { return false; } //Is this a fake field that is an explosion of a multifield?
+    public MatchFieldEnum multiFieldName() { return null; } //Returns the name of the field that this field gets consolidated into (only for exploded fields)
 
     /** Given a set of matchfieldenums, generate a map from required tables in the database to attributes depending
      * on them
