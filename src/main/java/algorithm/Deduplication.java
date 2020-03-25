@@ -19,12 +19,6 @@ public class Deduplication {
         for(Set<MatchFieldEnum> fieldsToMatchOn : config) {
             AuxMap auxMap = AuxMapManager.getAuxMap(db, fieldsToMatchOn);
             Set<Set<Long>> matchesForCurrentConfig = new HashSet<>();
-//            for (Map.Entry<HashCode, Set<Long>> entry : auxMap.getHashToIdMap().entrySet()) {
-//                if (entry.getValue().size() > 1) {
-//                    //TODO: Check for actual match before adding, not just matching hash
-//                    matchesForCurrentConfig.add(entry.getValue());
-//                }
-//            }
             for(Set<Long> idsWithMatchingHashes : auxMap.getHashToIdMap().values()) {
                 while(idsWithMatchingHashes.size() > 1) {
                     //TODO

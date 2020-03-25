@@ -118,6 +118,11 @@ public enum MatchFieldEnum {
         return rs.getObject(MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0]));
     };
 
+    public boolean isMultiField() { return false; }
+    public MatchFieldEnum explodedFieldName() { return null; } //Returns the name of the field that this field gets exploded into (only for multifields)
+    public boolean isExplodedField() { return false; } //Is this a fake field that is an explosion of a multifield?
+    public MatchFieldEnum multiFieldName() { return null; } //Returns the name of the field that this field gets consolidated into (only for exploded fields)
+
     /** Returns the underlying type of the attribute: should be suitable as a cast target for the corresponding
      * value of getFieldValue()
      *
