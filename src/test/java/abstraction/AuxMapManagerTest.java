@@ -31,7 +31,7 @@ public class AuxMapManagerTest {
     public void testAuxMapFilenameConstruction() {
         String auxFileName = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
         System.out.println(auxFileName);
-        assert auxFileName.equals(testDataDirectory + "FIRST_NAME_.auxmap");
+        assert auxFileName.equals(testDataDirectory + "-1921453883.auxmap");
     }
 
     @Test
