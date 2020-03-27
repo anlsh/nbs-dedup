@@ -66,10 +66,10 @@ public class AuxMapManager {
 
         try {
             File auxMapFile = new File(mfieldSetToFilename(aux.attrs));
+            auxMapFile.getParentFile().mkdirs();
             if (auxMapFile.getParentFile() != null) {
                 auxMapFile.getParentFile().mkdirs();
             }
-
 
             FileOutputStream fos = new FileOutputStream(auxMapFile);
             FileLock lock = fos.getChannel().lock();   //blocks until obtained
@@ -91,6 +91,7 @@ public class AuxMapManager {
 
         try {
             File managerFile = new File(AUXMAP_MANAGER);
+            managerFile.getParentFile().mkdirs();
             FileWriter managerFileWriter = new FileWriter(managerFile);
             if (managerFile.getParentFile() != null){
                 managerFile.getParentFile().mkdirs();

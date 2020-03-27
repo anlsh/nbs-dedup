@@ -31,12 +31,12 @@ public class AuxMapManagerTest {
     public void testAuxMapFilenameConstruction() {
         String auxFileName = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
         System.out.println(auxFileName);
-        assert auxFileName.equals(testDataDirectory + "FIRST_NAME_.auxmap");
+        assert auxFileName.equals(testDataDirectory + "-1921453883.auxmap");
     }
 
     @Test
     public void testGetAuxMap() {
-        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME,
+        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.SSN,
                 MatchFieldEnum.OTHER_TABLE_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
