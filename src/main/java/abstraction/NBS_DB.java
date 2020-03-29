@@ -11,9 +11,12 @@ import utils.BlockingThreadPool;
 import utils.ConcurrentSet;
 import utils.ResultType;
 
+import org.h2.tools.Server;
+
 public class NBS_DB {
 
     public Connection conn;
+    private Server server;
 
     public NBS_DB(String server, int port, String dbName, String username, String password) throws SQLException {
         conn = DriverManager.getConnection(
@@ -23,6 +26,31 @@ public class NBS_DB {
                         +  ";password=" + password
         );
         conn.setReadOnly(true);
+        server = null;
+    }
+
+    public NBS_DB(String name) throws SQLException, ClassNotFoundException{
+        server = Server.createTcpServer("-tcpAllowOthers").start();
+        Class.forName("org.h2.Driver"); //I'm not sure why this needs to be here
+        conn = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/" + name, "sa", "");
+        System.out.println("Connection established: " + conn.getMetaData().getDatabaseProductName() + "/" + conn.getCatalog());
+    }
+
+    //Only for test DBs
+    public void close() {
+        server.stop();
+    }
+
+    public void createTempTable(String tableName, String columnDefinitions) throws SQLException {
+        //https://www.tutorialspoint.com/h2_database/h2_database_create.htm
+        String createString = "CREATE TEMPORARY TABLE " + tableName + "(" + columnDefinitions + ") NOT PERSISTENT;";
+        conn.createStatement().executeUpdate(createString);
+    }
+
+    //https://www.w3schools.com/sql/sql_insert.asp
+    public void insertRow(String tableName, String columns, String values) throws SQLException {
+        String insertString = "INSERT INTO " + tableName + "(" + columns + ") VALUES (" + values + ");";
+        conn.createStatement().executeUpdate(insertString);
     }
 
     /** When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
