@@ -201,10 +201,8 @@ public class AuxMapManager {
                     attr_map.put(mfield, mfield.getFieldValue(rs));
                 }
 
-                if (!include_entry) {
-                    continue;
-                } else {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                if (include_entry) {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
                     HashCode hash = HashUtils.hashFields(attr_map);
 
                     map.getIdToHashMap().put(record_id, hash);
@@ -245,10 +243,8 @@ public class AuxMapManager {
                     attr_map.put(mfield, mfield.getFieldValue(rs));
                 }
 
-                if (!include_entry) {
-                    continue;
-                } else {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                if (include_entry) {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
                     HashCode hash = HashUtils.hashFields(attr_map);
 
                     map.getIdToHashMap().remove(record_id);
