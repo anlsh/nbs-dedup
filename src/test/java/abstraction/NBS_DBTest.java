@@ -1,6 +1,5 @@
 package abstraction;
 
-import algorithm.Deduplication;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -15,9 +14,10 @@ public class NBS_DBTest {
     Stopwatch timer;
 
     @Before
-    public void setupDatabaseConnection() throws SQLException {
-        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
-                Constants.DB_USERNAME, Constants.DB_PASSWORD);
+    public void setupDatabaseConnection() throws SQLException, ClassNotFoundException {
+//        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
+//                Constants.DB_USERNAME, Constants.DB_PASSWORD);
+        db = new NBS_DB("test_db");
         timer = Stopwatch.createUnstarted();
     }
 
@@ -38,6 +38,12 @@ public class NBS_DBTest {
 
         assert aux.hashToIdMap.size() > 0;
         assert aux.idToHashMap.size() > 0;
+    }
+
+    @Test
+    public void testCreateTestDB() throws SQLException, ClassNotFoundException {
+        db.createTempTable("test_table_1", "id INT NOT NULL, name VARCHAR(50)");
+        db.insertRow("test_table_1", "id, name", "1, 'test_name'");
     }
 
 //    @Test
