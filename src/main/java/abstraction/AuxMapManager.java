@@ -1,14 +1,14 @@
 package abstraction;
 
 import java.sql.ResultSet;
-import com.google.common.collect.Lists;
+
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
+import exceptions.UnknownValueException;
 import hashing.HashUtils;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
@@ -21,7 +21,7 @@ import java.util.*;
 public class AuxMapManager {
 
     private static String DATA_ROOT = "/tmp/aux-maps/";
-    private static String AUXMAP_MANAGER = "/tmp/aux-maps/manager.json";
+    private static String AUXMAP_MANAGER = DATA_ROOT + "manager.json";
 
     public static String getDataRoot() { return DATA_ROOT; }
     // TODO Make the setter for this do proper validation on directory name
@@ -30,7 +30,7 @@ public class AuxMapManager {
     public static String mfieldSetToString(final Set<MatchFieldEnum> attrs) {
         // TODO mfieldSetToString is called in a bunch of places, so there's some duplicate work there...
         // Maybe reduce duplicate calls to it later
-        List<MatchFieldEnum> attrList = new ArrayList<MatchFieldEnum>(attrs);
+        List<MatchFieldEnum> attrList = new ArrayList<>(attrs);
         Collections.sort(attrList);
         String attributes_str = "";
         for (MatchFieldEnum mfield : attrList) {
@@ -219,16 +219,23 @@ public class AuxMapManager {
 
 
                     for (MatchFieldEnum mfield : attrs) {
-                        Object mfield_val = mfield.getFieldValue(rs);
-                        if (mfield.isUnknownValue(mfield_val)) {
+                        try {
+                            Object mfield_val = mfield.getFieldValues(rs);
+                            attr_map.put(mfield, mfield.getFieldValues(rs));
+                        } catch (UnknownValueException e) {
                             include_entry = false;
                             break;
                         }
-                        attr_map.put(mfield, mfield.getFieldValue(rs));
                     }
 
                     if (include_entry) {
-                        long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
+                        long record_id;
+                        try {
+                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
+                        } catch (UnknownValueException e) {
+                            e.printStackTrace();
+                            throw new RuntimeException("Obtained record orphaned from any patient uid");
+                        }
                         HashCode hash = HashUtils.hashFields(attr_map);
                         if (map.getIdToHashMap().containsKey(record_id)) {
                             map.getIdToHashMap().get(record_id).add(hash);
@@ -264,18 +271,25 @@ public class AuxMapManager {
 
                     boolean include_entry = true;
                     for (MatchFieldEnum mfield : attrs) {
-                        Object mfield_val = mfield.getFieldValue(rs);
-                        if (mfield.isUnknownValue(mfield_val)) {
+                        try {
+                            Object mfield_val = mfield.getFieldValues(rs);
+                            attr_map.put(mfield, mfield_val);
+                        } catch (UnknownValueException e) {
                             include_entry = false;
                             break;
                         }
-                        attr_map.put(mfield, mfield.getFieldValue(rs));
                     }
 
                     if (!include_entry) {
                         continue;
                     } else {
-                        long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
+                        long record_id;
+                        try {
+                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
+                        } catch (UnknownValueException e) {
+                            e.printStackTrace();
+                            throw new RuntimeException("Obtained record orphaned from any patient uid");
+                        }
                         HashCode hash = HashUtils.hashFields(attr_map);
 
                         map.getIdToHashMap().remove(record_id);

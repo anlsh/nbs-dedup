@@ -9,6 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
+import exceptions.UnknownValueException;
 import hashing.HashUtils;
 import utils.ConcurrentSet;
 
@@ -27,6 +28,7 @@ public class NBS_DB {
     }
 
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
+        // TODO I don't know if this does what we need it to in light of the automatic multiple-values promotion
         // When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
         // that the original information matches.
         Map<MatchFieldEnum, Object> ret = new HashMap<>();
@@ -34,7 +36,12 @@ public class NBS_DB {
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
         for (MatchFieldEnum mf : attrs) {
-            ret.put(mf, mf.getFieldValue(rs));
+            try {
+                ret.put(mf, mf.getFieldValues(rs));
+            } catch (UnknownValueException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Fields are null where they shouldn't be...");
+            }
         }
         return ret;
     }
@@ -162,16 +169,27 @@ public class NBS_DB {
                 boolean include_entry = true;
 
                 for (MatchFieldEnum mfield : attrsAsList) {
-                    Object mfield_val = mfield.getFieldValue(rs);
-                    if (mfield.isUnknownValue(mfield_val)) {
+                    try {
+                        valuesList.add(mfield.getFieldValues(rs));
+                    } catch (UnknownValueException e) {
                         include_entry = false;
                         break;
                     }
-                    valuesList.add(mfield.getFieldValue(rs));
                 }
 
                 if (include_entry) {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
+                    long record_id;
+                    try {
+                        record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
+                    } catch (UnknownValueException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Obtained record orphaned from any patient uid");
+                    }
+                    try {
+                        Sets.cartesianProduct(valuesList);
+                    } catch (NullPointerException e) {
+                        System.out.println("There's an error!");
+                    }
                     for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
                         Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {

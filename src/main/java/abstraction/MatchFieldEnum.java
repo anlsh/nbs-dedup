@@ -1,5 +1,8 @@
 package abstraction;
 
+import exceptions.BadTableObjectException;
+import exceptions.UnknownValueException;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -13,55 +16,47 @@ public enum MatchFieldEnum {
     // class. Implementing the functions here unfortunately leads to a very long file, but gives a compile-time
     // guarantee that every flag implements everything that it needs to.
     UID {
-        @Override public MatchFieldEnum getParent() { return null; }
-
         @Override public boolean isDeduplicableField() { return false; }
         @Override public String getHumanReadableName() { return "Unique ID"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_PERSON_UID}; }
         @Override public Class getFieldType() { return Long.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
+//        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
     FIRST_NAME {
-        @Override public MatchFieldEnum getParent() { return null; }
         @Override public String getHumanReadableName() { return "First Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
+//        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
     LAST_NAME {
-        @Override public MatchFieldEnum getParent() { return null; }
         @Override public String getHumanReadableName() { return "Last Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
+//        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
     SSN {
-        @Override public MatchFieldEnum getParent() { return null; }
         @Override public String getHumanReadableName() { return "Social Security Number"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
+//        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
     SSN_LAST_FOUR {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
-        @Override public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
-            // TODO The manual cast to String rather than SSN.getFieldType is a code smell
+        @Override public Set<Object> getFieldValues(ResultSet rs) throws SQLException, UnknownValueException {
             Set<Object> lastFours = new HashSet<>();
-            for (Object ssn : SSN.getFieldValue(rs)) {
+            for (Object ssn : SSN.getFieldValues(rs)) {
                 String ssnStr = (String) ssn;
-                // TODO This doesn't actually give SSN's last four digits
                 lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
             }
             return lastFours;
         }
         @Override public Class getFieldType() { return String.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
 
@@ -70,7 +65,6 @@ public enum MatchFieldEnum {
         @Override public String getHumanReadableName() { return "Name but from the person table"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{"first_nm"}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() { return "Person_name"; }
     };
 
@@ -86,7 +80,9 @@ public enum MatchFieldEnum {
      *  (eg last four digits of an SSN
      * @return
      */
-    public abstract MatchFieldEnum getParent();
+    public MatchFieldEnum getParent() {
+        return null;
+    };
 
     /** Returns the name to be displayed for this MatchFieldEnum in the user-interface
      * @return
@@ -105,29 +101,6 @@ public enum MatchFieldEnum {
      */
     public abstract String[] getRequiredColumnsArray();
 
-    /** Detect if the attribute referred to by "this" is multiply-valued for the current row in the ResultSet
-     * @param rs
-     * @return
-     * @throws SQLException
-     */
-    public boolean isMultipleValued(ResultSet rs) throws SQLException {
-        if (getRequiredColumnsArray().length != 1) {
-            throw new RuntimeException("Using default isMultipleValued to retrieve information " +
-                    "depending on multiple fields");
-        }
-        Object tableObj = rs.getObject(
-                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
-        );
-        if (Collection.class.isInstance(tableObj)) {
-            return true;
-        } else if (this.getFieldType().isInstance(tableObj)) {
-            return false;
-        } else {
-            throw new RuntimeException("The object " + tableObj.toString() + " is neither a " + this.getFieldType()
-                    + " nor a List<" + this.getFieldType() + ">");
-        }
-    }
-
     /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
      * value.
      *
@@ -141,7 +114,7 @@ public enum MatchFieldEnum {
      * @return
      * @throws SQLException
      */
-    public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
+    public Set<Object> getFieldValues(ResultSet rs) throws SQLException, BadTableObjectException, UnknownValueException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
@@ -149,12 +122,25 @@ public enum MatchFieldEnum {
         Object tableObj = rs.getObject(
                 MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
         );
-        if (isMultipleValued(rs)) {
+        if (tableObj == null) {
+            throw new UnknownValueException(null, this);
+        }
+        // Check to see if it is a collection of the relevant type: if so, then return the collection
+        if (Collection.class.isInstance(tableObj)) {
+            for (Object o : (Collection) tableObj) {
+                if (!this.getFieldType().isInstance(o)) {
+                    throw new BadTableObjectException(o, this);
+                }
+            }
             return new HashSet<>((Collection) tableObj);
-        } else {
+        }
+        // Check to se if this is a single object of the specified type: if so, then promote to set & return
+        else if (this.getFieldType().isInstance(tableObj)) {
             HashSet ret = new HashSet();
             ret.add(tableObj);
             return ret;
+        } else {
+            throw new BadTableObjectException(tableObj, this);
         }
     };
 
@@ -167,5 +153,5 @@ public enum MatchFieldEnum {
      * @return
      */
     public abstract Class getFieldType();
-    public abstract boolean isUnknownValue(Object o);
+//     public abstract boolean isUnknownValue(Object o);
 }
