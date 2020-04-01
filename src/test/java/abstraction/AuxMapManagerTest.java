@@ -9,29 +9,27 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class AuxMapManagerTest {
 
     private NBS_DB db;
-    private final String testDataDirectory = "/tmp/nbs-data/";
 
     @Before
     public void setupDatabaseConnection() throws IOException, SQLException {
         db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD);
-        AuxMapManager.setDataRoot(testDataDirectory);
-        FileUtils.deleteDirectory(new File(testDataDirectory));
+        FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));
     }
 
     @Test
     public void testAuxMapFilenameConstruction() {
         String auxFileName = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
         System.out.println(auxFileName);
-        assert auxFileName.equals(testDataDirectory + "-1921453883.auxmap");
+        assert auxFileName.equals(AuxMapManager.getDataRoot() + "-1921453883.auxmap");
     }
 
     @Test
@@ -51,7 +49,7 @@ public class AuxMapManagerTest {
 
         long MAGIC_KEY = 7;
 
-        Map<Long, Set<HashCode>> dummyData = new HashMap<>();
+        ConcurrentMap<Long, Set<HashCode>> dummyData = new ConcurrentHashMap<>();
         dummyData.put(MAGIC_KEY, null);
         Set<MatchFieldEnum> empty = new HashSet<>();
         AuxMap emptyAux = new AuxMap(empty, dummyData, null);

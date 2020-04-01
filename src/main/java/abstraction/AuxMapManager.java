@@ -164,6 +164,8 @@ public class AuxMapManager {
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
             lock.release();
+
+            aux.ensureThreadSafe();
             return aux;
         } catch (Exception e) {
             // TODO Exception handling
@@ -181,8 +183,6 @@ public class AuxMapManager {
         File auxMapFile = new File(AUXMAP_MANAGER);
         auxMapFile.delete();
     }
-
-
 
     public static AuxMap getAuxMap(NBS_DB db, Set<MatchFieldEnum> attrs, boolean delete_existing) throws SQLException {
         if (delete_existing) {

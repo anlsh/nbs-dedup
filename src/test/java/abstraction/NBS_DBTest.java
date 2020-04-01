@@ -18,7 +18,7 @@ public class NBS_DBTest {
     }
 
     @Test
-    public void testCreateAuxMap() throws SQLException {
+    public void testCreateAuxMap() {
         AuxMap aux = db.constructAuxMap(Sets.newHashSet(Lists.newArrayList(
                 MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.SSN,

@@ -3,6 +3,7 @@ package abstraction;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -31,7 +32,7 @@ public class NBS_DB {
         // TODO I don't know if this does what we need it to in light of the automatic multiple-values promotion
         // When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
         // that the original information matches.
-        Map<MatchFieldEnum, Object> ret = new HashMap<>();
+        ConcurrentMap<MatchFieldEnum, Object> ret = new ConcurrentHashMap<>();
         String queryString = getSQLQueryForAllEntries(attrs, id);
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
@@ -121,9 +122,10 @@ public class NBS_DB {
         }
 
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
-        Map<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
+
+        ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         // The sets referred to in the type signature below are in fact synchronized.
-        Map<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
+        ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
         class HashDatabaseEntry implements Runnable {
             /**
@@ -161,11 +163,13 @@ public class NBS_DB {
         // TODO In the case that jobs are added to the queue faster than they can be processed, it is possible that
         // calls to the ThreadPoolExecutor's execute function should block until there are less than <n> items in
         // its job queue. Otherwise, this function may essentially load the entire database into RAM
+
+        ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
+
         try {
             while (rs.next()) {
-                ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
-                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
 
+                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
                 boolean include_entry = true;
 
                 for (MatchFieldEnum mfield : attrsAsList) {
@@ -185,11 +189,6 @@ public class NBS_DB {
                         e.printStackTrace();
                         throw new RuntimeException("Obtained record orphaned from any patient uid");
                     }
-                    try {
-                        Sets.cartesianProduct(valuesList);
-                    } catch (NullPointerException e) {
-                        System.out.println("There's an error!");
-                    }
                     for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
                         Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {
@@ -206,7 +205,9 @@ public class NBS_DB {
             throw new RuntimeException("Error while trying to scan database entries");
         }
 
-        return new AuxMap(attrs, idToHash, hashToIDs);
+        AuxMap toRet = new AuxMap(attrs, idToHash, hashToIDs);
+        toRet.ensureThreadSafe();
+        return toRet;
     }
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
         return constructAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
