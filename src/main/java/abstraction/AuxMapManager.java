@@ -122,6 +122,7 @@ public class AuxMapManager {
             JSONParser jsonParser = new JSONParser();
             JSONObject manager = (JSONObject) jsonParser.parse(reader);
 
+
             return manager;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -131,6 +132,22 @@ public class AuxMapManager {
             e.printStackTrace();
             throw new RuntimeException();
         } catch (ParseException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+    }
+
+    public static AuxMap loadAuxMapFromFilename(final String filename){
+        try {
+            FileInputStream fin = new FileInputStream(filename);
+            FileLock lock = fin.getChannel().lock();
+            ObjectInputStream ois = new ObjectInputStream(fin);
+            AuxMap aux = (AuxMap) ois.readObject();
+            ois.close();
+            lock.release();
+            return aux;
+        } catch (Exception e) {
+            // TODO Exception handling
             e.printStackTrace();
             throw new RuntimeException();
         }
@@ -181,84 +198,91 @@ public class AuxMapManager {
         return getAuxMap(db, attrs, false);
     }
 
-    public static void hookAddRecord(NBS_DB db, ResultSet rs, Set<MatchFieldEnum> attrs) {
+    public static void hookAddRecord(ResultSet rs) {
+        JSONObject auxmapManager = getOrCreateMapManager();
+        for (Object filename : auxmapManager.keySet()){
+            AuxMap map = loadAuxMapFromFilename((String)filename);
+            Set<MatchFieldEnum> attrs = map.attrs;
 
-        AuxMap map = getAuxMap(db, attrs);
+            try {
+                while (rs.next()) {
+                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
 
-        try {
-            while (rs.next()) {
-                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                    boolean include_entry = true;
 
-                boolean include_entry = true;
-
-                for (MatchFieldEnum mfield : attrs) {
-                    Object mfield_val = mfield.getFieldValue(rs);
-                    if (mfield.isUnknownValue(mfield_val)) {
-                        include_entry = false;
-                        break;
+                    for (MatchFieldEnum mfield : attrs) {
+                        Object mfield_val = mfield.getFieldValue(rs);
+                        if (mfield.isUnknownValue(mfield_val)) {
+                            include_entry = false;
+                            break;
+                        }
+                        attr_map.put(mfield, mfield.getFieldValue(rs));
                     }
-                    attr_map.put(mfield, mfield.getFieldValue(rs));
-                }
 
-                if (!include_entry) {
-                    continue;
-                } else {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
-                    HashCode hash = HashUtils.hashFields(attr_map);
-
-                    map.getIdToHashMap().put(record_id, hash);
-
-                    Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
-                    if (idsWithSameHash != null) {
-                        idsWithSameHash.add(record_id);
+                    if (!include_entry) {
+                        continue;
                     } else {
-                        map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
+                        long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                        HashCode hash = HashUtils.hashFields(attr_map);
+
+                        map.getIdToHashMap().put(record_id, hash);
+
+                        Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
+                        if (idsWithSameHash != null) {
+                            idsWithSameHash.add(record_id);
+                        } else {
+                            map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
+                        }
                     }
                 }
+            } catch (SQLException e) {
+                // TODO Exception Handling
+                e.printStackTrace();
+                throw new RuntimeException("Error while trying to scan database entries");
             }
-        } catch (SQLException e) {
-            // TODO Exception Handling
-            e.printStackTrace();
-            throw new RuntimeException("Error while trying to scan database entries");
-        }
 
-        saveAuxMapToFile(map);
+            saveAuxMapToFile(map);
+        }
     }
 
-    public static void hookRemoveRecord(NBS_DB db, ResultSet rs, Set<MatchFieldEnum> attrs) {
+    public static void hookRemoveRecord(ResultSet rs) {
 
-        AuxMap map = getAuxMap(db, attrs);
+        JSONObject auxmapManager = getOrCreateMapManager();
+        for (Object filename : auxmapManager.keySet()) {
+            AuxMap map = loadAuxMapFromFilename((String) filename);
+            Set<MatchFieldEnum> attrs = map.attrs;
 
-        try {
-            while (rs.next()) {
-                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+            try {
+                while (rs.next()) {
+                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
 
-                boolean include_entry = true;
+                    boolean include_entry = true;
 
-                for (MatchFieldEnum mfield : attrs) {
-                    Object mfield_val = mfield.getFieldValue(rs);
-                    if (mfield.isUnknownValue(mfield_val)) {
-                        include_entry = false;
-                        break;
+                    for (MatchFieldEnum mfield : attrs) {
+                        Object mfield_val = mfield.getFieldValue(rs);
+                        if (mfield.isUnknownValue(mfield_val)) {
+                            include_entry = false;
+                            break;
+                        }
+                        attr_map.put(mfield, mfield.getFieldValue(rs));
                     }
-                    attr_map.put(mfield, mfield.getFieldValue(rs));
-                }
 
-                if (!include_entry) {
-                    continue;
-                } else {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
-                    HashCode hash = HashUtils.hashFields(attr_map);
+                    if (!include_entry) {
+                        continue;
+                    } else {
+                        long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
+                        HashCode hash = HashUtils.hashFields(attr_map);
 
-                    map.getIdToHashMap().remove(record_id);
-                    map.getHashToIdMap().remove(hash);
+                        map.getIdToHashMap().remove(record_id);
+                        map.getHashToIdMap().remove(hash);
+                    }
                 }
+            } catch (SQLException e) {
+                // TODO Exception Handling
+                e.printStackTrace();
+                throw new RuntimeException("Error while trying to scan database entries");
             }
-        } catch (SQLException e) {
-            // TODO Exception Handling
-            e.printStackTrace();
-            throw new RuntimeException("Error while trying to scan database entries");
+            saveAuxMapToFile(map);
         }
-        saveAuxMapToFile(map);
     }
 }
