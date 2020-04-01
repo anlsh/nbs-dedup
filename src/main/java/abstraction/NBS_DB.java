@@ -190,7 +190,7 @@ public class NBS_DB {
                         throw new RuntimeException("Obtained record orphaned from any patient uid");
                     }
                     for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
-                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                        ConcurrentMap<MatchFieldEnum, Object> attr_map = new ConcurrentHashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {
                             attr_map.put(attrsAsList.get(i), specific_vals.get(i));
                             executor.execute(new HashDatabaseEntry(record_id, attr_map));
@@ -198,13 +198,13 @@ public class NBS_DB {
                     }
                 }
             }
-            executor.shutdown();
         } catch (SQLException e) {
             // TODO Exception Handling
             e.printStackTrace();
             throw new RuntimeException("Error while trying to scan database entries");
         }
 
+        executor.shutdown();
         AuxMap toRet = new AuxMap(attrs, idToHash, hashToIDs);
         toRet.ensureThreadSafe();
         return toRet;
