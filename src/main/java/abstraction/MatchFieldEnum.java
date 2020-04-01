@@ -4,7 +4,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+/**
+ * An enum where each value corresponds to a flag which can be matched on: for instance first name, or last name,
+ * or SSN, or the last four digits of an SSN, or anything else.
+ */
 public enum MatchFieldEnum {
+    // Match flags. Each match flag must implement a certain set of functions, which are declared at the end of this
+    // class. Implementing the functions here unfortunately leads to a very long file, but gives a compile-time
+    // guarantee that every flag implements everything that it needs to.
     UID {
         @Override public MatchFieldEnum getParent() { return null; }
 
@@ -43,16 +50,21 @@ public enum MatchFieldEnum {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
-        @Override public Object getFieldValue(ResultSet rs) throws SQLException {
+        @Override public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
             // TODO The manual cast to String rather than SSN.getFieldType is a code smell
-            String ssn = (String) SSN.getFieldValue(rs);
-            // TODO This doesn't actually give SSN's last four digits
-            return ssn == null ? null : ssn.substring(0, 1);
+            Set<Object> lastFours = new HashSet<>();
+            for (Object ssn : SSN.getFieldValue(rs)) {
+                String ssnStr = (String) ssn;
+                // TODO This doesn't actually give SSN's last four digits
+                lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
+            }
+            return lastFours;
         }
         @Override public Class getFieldType() { return String.class; }
         @Override public boolean isUnknownValue(Object o) { return o == null; }
         @Override public String getTableName() {return "Person";}
     },
+
     OTHER_TABLE_NAME {
         @Override public MatchFieldEnum getParent() { return null; }
         @Override public String getHumanReadableName() { return "Name but from the person table"; }
@@ -62,22 +74,98 @@ public enum MatchFieldEnum {
         @Override public String getTableName() { return "Person_name"; }
     };
 
+    /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
+     *  for others: at the moment the only field which it doesn't make sense to deduplicate on is UID
+     * @return
+     */
     public boolean isDeduplicableField() {
-        // Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
-        // for others: at the moment the only field which it doesn't make sense to deduplicate on is UID
         return true;
     }
+
+    /** Return null if the attribute in question is "top-level," (eg SSN), or the parent MatchFieldEnum if not
+     *  (eg last four digits of an SSN
+     * @return
+     */
     public abstract MatchFieldEnum getParent();
+
+    /** Returns the name to be displayed for this MatchFieldEnum in the user-interface
+     * @return
+     */
     public abstract String getHumanReadableName();
+
+    /** Returns the name of the table on which this attribute depends. Each attribute can only depend on a single table
+     * at the moment, as we see no reason to augment this functionality.
+     * @return
+     */
+    public abstract String getTableName();
+
+    /** Returns a list of columns which the attribute depends on *within its table*. So for example the FIRST_NM
+     * flag which depends on the "first_nm" column from the "Person_name" table would return ["first_nm"]
+     * @return
+     */
     public abstract String[] getRequiredColumnsArray();
-    public Object getFieldValue(ResultSet rs) throws SQLException {
+
+    /** Detect if the attribute referred to by "this" is multiply-valued for the current row in the ResultSet
+     * @param rs
+     * @return
+     * @throws SQLException
+     */
+    public boolean isMultipleValued(ResultSet rs) throws SQLException {
+        if (getRequiredColumnsArray().length != 1) {
+            throw new RuntimeException("Using default isMultipleValued to retrieve information " +
+                    "depending on multiple fields");
+        }
+        Object tableObj = rs.getObject(
+                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+        );
+        if (Collection.class.isInstance(tableObj)) {
+            return true;
+        } else if (this.getFieldType().isInstance(tableObj)) {
+            return false;
+        } else {
+            throw new RuntimeException("The object " + tableObj.toString() + " is neither a " + this.getFieldType()
+                    + " nor a List<" + this.getFieldType() + ">");
+        }
+    }
+
+    /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
+     * value.
+     *
+     * To account for attributes which can have multiple values, this function must always return a list consisting
+     * of all possible values for the attribute- even if the attribute happens to be singly-valued for the given row
+     * in the ResultSet.
+     *
+     * As attributes which essentially act as pass-throughs for a single column are very common, the default
+     * implementation performs this operation.
+     * @param rs
+     * @return
+     * @throws SQLException
+     */
+    public Set<Object> getFieldValue(ResultSet rs) throws SQLException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
         }
-        return rs.getObject(getTableName() + "." + getRequiredColumnsArray()[0]);
+        Object tableObj = rs.getObject(
+                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+        );
+        if (isMultipleValued(rs)) {
+            return new HashSet<>((Collection) tableObj);
+        } else {
+            HashSet ret = new HashSet();
+            ret.add(tableObj);
+            return ret;
+        }
     };
+
+    /** Returns the underlying type of the attribute: should be suitable as a cast target for the corresponding
+     * value of getFieldValue()
+     *
+     * Possibly multiple-valued attributes should be treated the same as single-valued ones. For instance, the return
+     * value for the FIRST_NAME attribute is String, even though it should be more like List<String> since people can
+     * have multiple names
+     * @return
+     */
     public abstract Class getFieldType();
     public abstract boolean isUnknownValue(Object o);
-    public abstract String getTableName();
 }

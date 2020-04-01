@@ -1,7 +1,7 @@
 package hashing;
 
 import abstraction.MatchFieldEnum;
-//import abstraction.MatchFieldUtils;
+import abstraction.MatchFieldUtils;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
 
@@ -74,31 +74,26 @@ public class HashUtils {
     }
 
     public static HashCode hashFields(Map<MatchFieldEnum, Object> record) {
-        // TODO Raise an error if Person_UID is ever part of the hash since that would be a subtle and
-        // soul-crushing bug.
 
-        Set<MatchFieldEnum> keySet = record.keySet();
-        if(keySet.size() > 1 && keySet.contains(MatchFieldEnum.UID)) {
-            throw new RuntimeException("Trying to hash UID with other fields!");
-        }
-        MatchFieldEnum[] sortedKeys = new MatchFieldEnum[keySet.size()];
-        int i = 0;
-        for(MatchFieldEnum key : keySet) {
-            sortedKeys[i] = key;
-            i++;
-        }
-        // TODO this shouldn't be sorted @ every run of HashCode, just statically once
-        Arrays.sort(sortedKeys);
-        Hasher hasher = hashFunction.newHasher();
-        for(i = 0; i < sortedKeys.length; i++) {
-            //TODO add sizes to make these more unique
-            try {
-                putIntoHasher(hasher,  sortedKeys[i].getFieldType(), record.get(sortedKeys[i]));
-            } catch(OperationNotSupportedException e) {
-                throw new RuntimeException(e);
+        for (MatchFieldEnum mfield : record.keySet()) {
+            if (!mfield.isDeduplicableField()) {
+                throw new RuntimeException("Attempting to include non-deduplicable field " + mfield
+                        + " in deduplication attributes");
             }
         }
 
+        Set<MatchFieldEnum> keySet = record.keySet();
+        Hasher hasher = hashFunction.newHasher();
+
+        for (MatchFieldEnum mfield : MatchFieldUtils.getSortedMfields()) {
+            if (keySet.contains(mfield)) {
+                try {
+                    putIntoHasher(hasher,  mfield.getFieldType(), record.get(mfield));
+                } catch(OperationNotSupportedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         return hasher.hash();
     }
 }

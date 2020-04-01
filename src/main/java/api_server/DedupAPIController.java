@@ -1,4 +1,5 @@
 package api_server;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -46,7 +47,7 @@ public class DedupAPIController {
     }
 
     @PostMapping("create_subconfig")
-    public Boolean create_subconfig(@RequestParam(value = "data") String data) {
+    public Boolean create_subconfig(@RequestParam(value = "data") String data) throws SQLException {
 
         // Working with arbitrary data kinda sucks, or maybe I'm just dumb.
         // See https://www.quora.com/Can-I-fetch-a-JSON-object-in-my-spring-controller-without-using-a-model-object
@@ -76,7 +77,7 @@ public class DedupAPIController {
     }
 
     @PostMapping("deduplicate")
-    public String deduplicate(@RequestParam(value = "data") String data) {
+    public String deduplicate(@RequestParam(value = "data") String data) throws SQLException {
         // Apparently the square brackets aren't allowed in posts?
         // https://stackoverflow.com/questions/11944410/passing-array-in-get-for-a-rest-call
 

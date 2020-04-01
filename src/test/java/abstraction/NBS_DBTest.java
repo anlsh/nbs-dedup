@@ -22,11 +22,12 @@ public class NBS_DBTest {
     }
 
     @Test
-    public void testCreateAuxMap() {
+    public void testCreateAuxMap() throws SQLException {
         timer.start();
         AuxMap aux = db.constructAuxMap(Sets.newHashSet(Lists.newArrayList(
                 MatchFieldEnum.FIRST_NAME,
-                MatchFieldEnum.SSN
+                MatchFieldEnum.SSN,
+                MatchFieldEnum.OTHER_TABLE_NAME
         )));
         timer.stop();
 

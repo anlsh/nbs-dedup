@@ -35,8 +35,10 @@ public class AuxMapManagerTest {
     }
 
     @Test
-    public void testGetAuxMap() {
-        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.SSN,
+
+
+    public void testGetAuxMap() throws SQLException {
+        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.OTHER_TABLE_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
@@ -49,7 +51,7 @@ public class AuxMapManagerTest {
 
         long MAGIC_KEY = 7;
 
-        Map<Long, HashCode> dummyData = new HashMap<>();
+        Map<Long, Set<HashCode>> dummyData = new HashMap<>();
         dummyData.put(MAGIC_KEY, null);
         Set<MatchFieldEnum> empty = new HashSet<>();
         AuxMap emptyAux = new AuxMap(empty, dummyData, null);

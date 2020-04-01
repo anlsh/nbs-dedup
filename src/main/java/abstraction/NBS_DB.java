@@ -2,89 +2,109 @@ package abstraction;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
+import utils.ConcurrentSet;
 
 public class NBS_DB {
 
     public Connection conn;
 
     public NBS_DB(String server, int port, String dbName, String username, String password) throws SQLException {
-        String connectionUrl = "jdbc:sqlserver://" + server + ":" + port + ";databaseName=" + dbName
-                + ";user=" + username +  ";password=" + password;
-
-        conn = DriverManager.getConnection(connectionUrl);
-        // For safety
+        conn = DriverManager.getConnection(
+                "jdbc:sqlserver://" + server + ":" + port
+                        + ";databaseName=" + dbName
+                        + ";user=" + username
+                        +  ";password=" + password
+        );
         conn.setReadOnly(true);
     }
 
-    public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) {
-        Set<String> requiredColumns;
-        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
+    public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
+        // When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
+        // that the original information matches.
         Map<MatchFieldEnum, Object> ret = new HashMap<>();
-        ResultSet rs;
-        for(String tableName : tableNameMap.keySet()) {
-            requiredColumns = new HashSet<>();
-            for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
-                requiredColumns.addAll(Arrays.asList(mfield.getRequiredColumnsArray()));
-            }
-            requiredColumns.add(Constants.COL_PERSON_UID);
-            try {
-                Statement query = conn.createStatement();
-                String q = "SELECT " + String.join(",", Lists.newArrayList(requiredColumns)) +
-                        " from " + tableName + " where " + Constants.COL_PERSON_UID + " = " + id;
-                rs = query.executeQuery(q);
-                rs.next();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Could not query SQL DB to find Person with id "
-                        + id + " and rows " + String.join(",", Lists.newArrayList(requiredColumns)));
-            }
-            for (MatchFieldEnum mf : tableNameMap.get(tableName)) {
-                try {
-                    ret.put(mf, mf.getFieldValue(rs));
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    ;
-                    throw new RuntimeException("Couldn't get value for field " + mf + " in resultset");
-                }
-            }
+        String queryString = getSQLQueryForAllEntries(attrs, id);
+        ResultSet rs = conn.createStatement().executeQuery(queryString);
+        rs.next();
+        for (MatchFieldEnum mf : attrs) {
+            ret.put(mf, mf.getFieldValue(rs));
         }
         return ret;
     }
 
-    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-
+    /** Generates an SQL query to retrieve the columns for any given set of match fields and (potentially) any specific
+     * id.
+     *
+     * If uid is null, then returns a ResultSet containing the needed columns for every single entry in the
+     * database. If it is non-null, then the ResultSet only contains the information concerning the given uid
+     * @param attrs The set of MatchFields to deduplicate on
+     * @param uid The specific person ID to retrieve information for, or null if information for all IDs should be
+     *            retrieved
+     * @return
+     */
+    private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long uid) {
         Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
-        ResultSet rs;
-        List<String> colsForEachTableList = new ArrayList<>();
+        List<String> tableColumns = new ArrayList<>();
         String queryString = "SELECT ";
         for(String tableName : tableNameMap.keySet()) {
-            Set<String> requiredColumns = new HashSet<>();
+            List<String> currTableColumns = new ArrayList<>();
+            currTableColumns.add(
+                    MatchFieldUtils.getSQLQualifiedColName(tableName, Constants.COL_PERSON_UID)
+                    + " as " + MatchFieldUtils.getAliasedColName(tableName, Constants.COL_PERSON_UID)
+            );
             for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
                 for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
-                    requiredColumns.add(tableName + "." + reqiredColumn);
+                    currTableColumns.add(
+                            MatchFieldUtils.getSQLQualifiedColName(tableName, reqiredColumn)
+                            + " as " + MatchFieldUtils.getAliasedColName(tableName, reqiredColumn)
+                    );
                 }
             }
-            requiredColumns.add(tableName + "." + Constants.COL_PERSON_UID);
-            colsForEachTableList.add(String.join(",", Lists.newArrayList(requiredColumns)));
+            tableColumns.add(String.join(", ", currTableColumns));
         }
-        queryString += String.join(",", colsForEachTableList);
-        queryString += " from " + String.join(",", Lists.newArrayList(tableNameMap.keySet()));
+        queryString += String.join(", ", tableColumns);
+        queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
+
+        // TODO Don't hardcode the primary table name!
+        // If only fetching for a single id, add that constraint to the query
+        List<String> where_clauses = new ArrayList<>();
+        if (uid != null) {
+            where_clauses.add("Person." + Constants.COL_PERSON_UID + " = " + uid);
+        }
+        // Align the columns from each table by the person_uid column.
         if(tableNameMap.keySet().size() > 1) {
-            //This kind of joining found at https://www.geeksforgeeks.org/joining-three-tables-sql/
-            queryString += " where ";
             Iterator<String> iter = tableNameMap.keySet().iterator();
             String primaryTableName = iter.next();
             while (iter.hasNext()) {
                 //TODO make a map from each table to the name of its Person ID column, use that instead of Constants.COL_PERSON_UID all the time
-                queryString += primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID;
-                if(iter.hasNext()) queryString += " and ";
+                where_clauses.add(primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID);
             }
         }
+        if (where_clauses.size() > 0) {
+            queryString += " where " + String.join(" and ", where_clauses);
+        }
+
+        return queryString;
+    }
+
+    /** Given a set of match fields, traverse the database and create a fresh AuxMap object.
+     * @param attrs
+     * @param num_threads The number of worker threads used to hash database entries.
+     * @return
+     */
+    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs, int num_threads) {
+
+        // Obtain a ResultSet object through which to access the database
+        ResultSet rs;
+        String queryString = getSQLQueryForAllEntries(attrs, null);
+
         try {
             Statement query = conn.createStatement();
             rs = query.executeQuery(queryString);
@@ -93,43 +113,75 @@ public class NBS_DB {
             throw new RuntimeException("Could not connect to and query SQL database");
         }
 
-        Map<Long, HashCode> idToHash = new HashMap<>();
-        Map<HashCode, Set<Long>> hashToIDs = new HashMap<>();
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
+        Map<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
+        // The sets referred to in the type signature below are in fact synchronized.
+        Map<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
-        // TODO This methodology is sourced from https://stackoverflow.com/questions/7507121/efficient-way-to-handle-resultset-in-java
-        // But should be abstracted using a standard library like DBUtils or MapListHandler
+        class HashDatabaseEntry implements Runnable {
+            /**
+             * Represents a job which will calculate the hash of the given attribute map and update the relevant
+             * maps for the final AuxMap
+             */
+            Map<MatchFieldEnum, Object> attr_map;
+            long uid;
+            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
+                this.uid = uid;
+                this.attr_map = attr_map;
+            }
 
+            @Override
+            public void run() {
+                HashCode hash = HashUtils.hashFields(attr_map);
+
+                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
+                if (currentIdToHashes != null) {
+                    currentIdToHashes.add(hash);
+                } else {
+                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
+                }
+
+                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                if (idsWithSameHash != null) {
+                    idsWithSameHash.add(uid);
+                } else {
+                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
+                }
+            }
+        }
+
+        // Loop over the items in the ResultSet, submitting them to a thread pool to be hashed in a concurrent fashion.
+        // TODO In the case that jobs are added to the queue faster than they can be processed, it is possible that
+        // calls to the ThreadPoolExecutor's execute function should block until there are less than <n> items in
+        // its job queue. Otherwise, this function may essentially load the entire database into RAM
         try {
             while (rs.next()) {
-                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
+                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
 
                 boolean include_entry = true;
 
-                for (MatchFieldEnum mfield : attrs) {
+                for (MatchFieldEnum mfield : attrsAsList) {
                     Object mfield_val = mfield.getFieldValue(rs);
                     if (mfield.isUnknownValue(mfield_val)) {
                         include_entry = false;
                         break;
                     }
-                    attr_map.put(mfield, mfield.getFieldValue(rs));
+                    valuesList.add(mfield.getFieldValue(rs));
                 }
 
-                if (!include_entry) {
-                    continue;
-                } else {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs);
-                    HashCode hash = HashUtils.hashFields(attr_map);
-
-                    idToHash.put(record_id, hash);
-
-                    Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                    if (idsWithSameHash != null) {
-                        idsWithSameHash.add(record_id);
-                    } else {
-                        hashToIDs.put(hash, Sets.newHashSet(record_id));
+                if (include_entry) {
+                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
+                    for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
+                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+                        for (int i = 0; i < attrs.size(); ++i) {
+                            attr_map.put(attrsAsList.get(i), specific_vals.get(i));
+                            executor.execute(new HashDatabaseEntry(record_id, attr_map));
+                        }
                     }
                 }
             }
+            executor.shutdown();
         } catch (SQLException e) {
             // TODO Exception Handling
             e.printStackTrace();
@@ -137,5 +189,8 @@ public class NBS_DB {
         }
 
         return new AuxMap(attrs, idToHash, hashToIDs);
+    }
+    public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
+        return constructAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
     }
 }
