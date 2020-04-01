@@ -18,18 +18,16 @@ import static org.junit.Assert.*;
 
 public class DeduplicationTest {
     private NBS_DB db;
-    private Deduplication dService;
     Stopwatch timer;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, IOException {
         db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t");
-        dService = new Deduplication();
     }
 
     @Test
-    public void testGetMatches() throws Exception {
+    public void testGetMatches() throws SQLException {
 
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(Sets.newHashSet(
@@ -37,7 +35,7 @@ public class DeduplicationTest {
                 MatchFieldEnum.LAST_NAME
         ));
         timer.start();
-        List<Set<Set<Long>>> res = dService.getMatching(db, config);
+        List<Set<Set<Long>>> res = Deduplication.getMatching(db, config);
         timer.stop();
 
         System.out.println("Test completed in " + timer);
@@ -45,12 +43,12 @@ public class DeduplicationTest {
     }
 
     @Test
-    public void testGetMatchesMerge() throws Exception {
+    public void testGetMatchesMerge() throws SQLException {
 
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
 
-        Set<Set<Long>> res = dService.getMatchingMerged(db, config);
+        Set<Set<Long>> res = Deduplication.getMatchingMerged(db, config);
         System.out.println("merged results " + res.toString());
 
     }
