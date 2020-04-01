@@ -26,8 +26,6 @@ public class DeduplicationTest {
         db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t");
         dService = new Deduplication();
-        timer = Stopwatch.createUnstarted();
-        AuxMapManager.setDataRoot("/tmp/dedup-test-data/");
     }
 
     @Test
@@ -52,7 +50,6 @@ public class DeduplicationTest {
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
 
-//        List<Set<Long>> res = dService.getMatchingMerged(db, config);
         Set<Set<Long>> res = dService.getMatchingMerged(db, config);
         System.out.println("merged results " + res.toString());
 

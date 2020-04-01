@@ -28,10 +28,16 @@ public class NBS_DB {
         conn.setReadOnly(true);
     }
 
+    /** When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
+     * that the match is in fact genuine. This function calculates the MatchField values for the given person_uid and
+     * returns them in a dictionary
+     * @param id
+     * @param attrs
+     * @return
+     * @throws SQLException
+     */
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
         // TODO I don't know if this does what we need it to in light of the automatic multiple-values promotion
-        // When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
-        // that the original information matches.
         ConcurrentMap<MatchFieldEnum, Object> ret = new ConcurrentHashMap<>();
         String queryString = getSQLQueryForAllEntries(attrs, id);
         ResultSet rs = conn.createStatement().executeQuery(queryString);
@@ -80,19 +86,20 @@ public class NBS_DB {
         queryString += String.join(", ", tableColumns);
         queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
 
-        // TODO Don't hardcode the primary table name!
         // If only fetching for a single id, add that constraint to the query
         List<String> where_clauses = new ArrayList<>();
         if (uid != null) {
-            where_clauses.add("Person." + Constants.COL_PERSON_UID + " = " + uid);
+            where_clauses.add(MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
+                    + " = " + uid);
         }
         // Align the columns from each table by the person_uid column.
         if(tableNameMap.keySet().size() > 1) {
             Iterator<String> iter = tableNameMap.keySet().iterator();
-            String primaryTableName = iter.next();
             while (iter.hasNext()) {
-                //TODO make a map from each table to the name of its Person ID column, use that instead of Constants.COL_PERSON_UID all the time
-                where_clauses.add(primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID);
+                where_clauses.add(
+                        MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
+                        + " = "
+                        + MatchFieldUtils.getSQLQualifiedColName(iter.next(), Constants.COL_PERSON_UID));
             }
         }
         if (where_clauses.size() > 0) {
@@ -112,7 +119,6 @@ public class NBS_DB {
         // Obtain a ResultSet object through which to access the database
         ResultSet rs;
         String queryString = getSQLQueryForAllEntries(attrs, null);
-
         try {
             Statement query = conn.createStatement();
             rs = query.executeQuery(queryString);

@@ -28,7 +28,6 @@ public class AuxMapManager {
     public static void setDataRoot(String curr) { DATA_ROOT = curr; }
 
     public static String mfieldSetToString(final Set<MatchFieldEnum> attrs) {
-        // TODO mfieldSetToString is called in a bunch of places, so there's some duplicate work there...
         // Maybe reduce duplicate calls to it later
         List<MatchFieldEnum> attrList = new ArrayList<>(attrs);
         Collections.sort(attrList);

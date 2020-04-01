@@ -153,5 +153,4 @@ public enum MatchFieldEnum {
      * @return
      */
     public abstract Class getFieldType();
-//     public abstract boolean isUnknownValue(Object o);
 }

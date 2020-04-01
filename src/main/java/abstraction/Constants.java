@@ -14,4 +14,5 @@ public class Constants {
     public static final String WEB_PORT = "8080";
     public static final String GET_CONFIGS_REQUEST = "/config/";
     public static final int NUM_AUXMAP_THREADS = 4;
+    public static final String PRIMARY_TABLE_NAME = "Person";
 }
