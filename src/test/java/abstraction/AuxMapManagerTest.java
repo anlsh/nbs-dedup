@@ -50,7 +50,7 @@ public class AuxMapManagerTest {
         long MAGIC_KEY = 7;
 
         ConcurrentMap<Long, Set<HashCode>> dummyData = new ConcurrentHashMap<>();
-        dummyData.put(MAGIC_KEY, null);
+        dummyData.put(MAGIC_KEY, new HashSet<>());
         Set<MatchFieldEnum> empty = new HashSet<>();
         AuxMap emptyAux = new AuxMap(empty, dummyData, null);
 

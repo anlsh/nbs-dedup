@@ -75,7 +75,7 @@ public class AuxMapManager {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(aux);
             oos.close();
-            lock.release();
+
 
             hookEditManager(aux);
         } catch (Exception e) {
@@ -143,7 +143,6 @@ public class AuxMapManager {
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
-            lock.release();
             return aux;
         } catch (Exception e) {
             // TODO Exception handling
@@ -162,7 +161,6 @@ public class AuxMapManager {
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
-            lock.release();
 
             aux.ensureThreadSafe();
             return aux;
