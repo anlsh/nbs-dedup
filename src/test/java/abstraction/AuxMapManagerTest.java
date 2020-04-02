@@ -52,7 +52,10 @@ public class AuxMapManagerTest {
         ConcurrentMap<Long, Set<HashCode>> dummyData = new ConcurrentHashMap<>();
         dummyData.put(MAGIC_KEY, new HashSet<>());
         Set<MatchFieldEnum> empty = new HashSet<>();
-        AuxMap emptyAux = new AuxMap(empty, dummyData, null);
+
+        ConcurrentMap<HashCode, Set<Long>> dummyHashToId = new ConcurrentHashMap<>();
+
+        AuxMap emptyAux = new AuxMap(empty, dummyData, dummyHashToId);
 
         assert !AuxMapManager.auxMapExists(empty);
         AuxMapManager.saveAuxMapToFile(emptyAux);
@@ -61,7 +64,7 @@ public class AuxMapManagerTest {
         AuxMap loadedMap = AuxMapManager.loadAuxMapFromFile(empty);
         assert loadedMap.attrs.equals(empty);
         assert loadedMap.idToHashMap.size() == 1;
-        assert loadedMap.idToHashMap.get(MAGIC_KEY) == null;
+        assert loadedMap.idToHashMap.get(MAGIC_KEY).isEmpty();
 
         AuxMapManager.deleteAuxMap(empty);
         assert !AuxMapManager.auxMapExists(empty);

@@ -139,7 +139,7 @@ public class AuxMapManager {
     public static AuxMap loadAuxMapFromFilename(final String filename){
         try {
             FileInputStream fin = new FileInputStream(filename);
-            FileLock lock = fin.getChannel().lock();
+            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
@@ -157,7 +157,7 @@ public class AuxMapManager {
 
         try {
             FileInputStream fin = new FileInputStream(mfieldSetToFilename(attrs));
-            FileLock lock = fin.getChannel().lock();
+            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
