@@ -77,7 +77,7 @@ public class AuxMapManager {
             oos.close();
 
 
-            hookEditManager(aux);
+            hookManagerAddMap(aux);
         } catch (Exception e) {
             // TODO Exception handling
             e.printStackTrace();
@@ -105,13 +105,21 @@ public class AuxMapManager {
         }
     }
 
-    public static void hookEditManager(AuxMap auxMap){
+    public static synchronized void hookManagerAddMap(AuxMap auxMap){
         JSONObject manager = getOrCreateMapManager();
         String fileName = mfieldSetToFilename(auxMap.attrs);
         JSONArray attrString = new JSONArray();
         attrString.addAll(auxMap.attrs);
 
         manager.put(fileName, attrString);
+        saveManagerToFile(manager);
+    }
+
+    public static synchronized void hookManagerDeleteMap(Set<MatchFieldEnum> attrs){
+        JSONObject manager = getOrCreateMapManager();
+        String fileName = mfieldSetToFilename(attrs);
+
+        manager.remove(fileName);
         saveManagerToFile(manager);
     }
 
@@ -174,6 +182,9 @@ public class AuxMapManager {
     public static void deleteAuxMap(final Set<MatchFieldEnum> attrs) {
         File auxMapfile = new File(mfieldSetToFilename(attrs));
         auxMapfile.delete();
+
+        hookManagerDeleteMap(attrs);
+
     }
 
     public static void deleteAuxMapManager(){
