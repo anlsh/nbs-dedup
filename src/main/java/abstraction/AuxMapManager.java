@@ -1,15 +1,8 @@
 package abstraction;
 
-import java.sql.ResultSet;
-
-import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
-
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
-import exceptions.UnknownValueException;
-import hashing.HashUtils;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -211,106 +204,106 @@ public class AuxMapManager {
     }
 
 
-    public static void hookAddRecord(ResultSet rs) {
-
-
-        JSONObject auxmapManager = getOrCreateMapManager();
-        for (Object filename : auxmapManager.keySet()){
-            AuxMap map = loadAuxMapFromFilename((String)filename);
-            Set<MatchFieldEnum> attrs = map.attrs;
-            try {
-                while (rs.next()) {
-                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-
-
-                    boolean include_entry = true;
-
-
-                    for (MatchFieldEnum mfield : attrs) {
-                        try {
-                            Object mfield_val = mfield.getFieldValues(rs);
-                            attr_map.put(mfield, mfield.getFieldValues(rs));
-                        } catch (UnknownValueException e) {
-                            include_entry = false;
-                            break;
-                        }
-                    }
-
-                    if (include_entry) {
-                        long record_id;
-                        try {
-                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
-                        } catch (UnknownValueException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("Obtained record orphaned from any patient uid");
-                        }
-                        HashCode hash = HashUtils.hashFields(attr_map);
-                        if (map.getIdToHashMap().containsKey(record_id)) {
-                            map.getIdToHashMap().get(record_id).add(hash);
-                        }
-                        Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
-                        if (idsWithSameHash != null) {
-                            idsWithSameHash.add(record_id);
-                        } else {
-                            map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
-                        }
-                    }
-                }
-            }    catch (SQLException e) {
-                // TODO Exception Handling
-                e.printStackTrace();
-                throw new RuntimeException("Error while trying to scan database entries");
-            }
-
-            saveAuxMapToFile(map);
-        }
-    }
-
-    public static void hookRemoveRecord(ResultSet rs) {
-
-        JSONObject auxmapManager = getOrCreateMapManager();
-        for (Object filename : auxmapManager.keySet()) {
-            AuxMap map = loadAuxMapFromFilename((String) filename);
-            Set<MatchFieldEnum> attrs = map.attrs;
-
-            try {
-                while (rs.next()) {
-                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-
-                    boolean include_entry = true;
-                    for (MatchFieldEnum mfield : attrs) {
-                        try {
-                            Object mfield_val = mfield.getFieldValues(rs);
-                            attr_map.put(mfield, mfield_val);
-                        } catch (UnknownValueException e) {
-                            include_entry = false;
-                            break;
-                        }
-                    }
-
-                    if (!include_entry) {
-                        continue;
-                    } else {
-                        long record_id;
-                        try {
-                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
-                        } catch (UnknownValueException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("Obtained record orphaned from any patient uid");
-                        }
-                        HashCode hash = HashUtils.hashFields(attr_map);
-
-                        map.getIdToHashMap().remove(record_id);
-                        map.getHashToIdMap().remove(hash);
-                    }
-                }
-            } catch (SQLException e) {
-                // TODO Exception Handling
-                e.printStackTrace();
-                throw new RuntimeException("Error while trying to scan database entries");
-            }
-            saveAuxMapToFile(map);
-
-        }
-    }
+//    public static void hookAddRecord(ResultSet rs) {
+//
+//
+//        JSONObject auxmapManager = getOrCreateMapManager();
+//        for (Object filename : auxmapManager.keySet()){
+//            AuxMap map = loadAuxMapFromFilename((String)filename);
+//            Set<MatchFieldEnum> attrs = map.attrs;
+//            try {
+//                while (rs.next()) {
+//                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+//
+//
+//                    boolean include_entry = true;
+//
+//
+//                    for (MatchFieldEnum mfield : attrs) {
+//                        try {
+//                            Object mfield_val = mfield.getFieldValues(rs);
+//                            attr_map.put(mfield, mfield.getFieldValues(rs));
+//                        } catch (UnknownValueException e) {
+//                            include_entry = false;
+//                            break;
+//                        }
+//                    }
+//
+//                    if (include_entry) {
+//                        long record_id;
+//                        try {
+//                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
+//                        } catch (UnknownValueException e) {
+//                            e.printStackTrace();
+//                            throw new RuntimeException("Obtained record orphaned from any patient uid");
+//                        }
+//                        HashCode hash = HashUtils.hashFields(attr_map);
+//                        if (map.getIdToHashMap().containsKey(record_id)) {
+//                            map.getIdToHashMap().get(record_id).add(hash);
+//                        }
+//                        Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
+//                        if (idsWithSameHash != null) {
+//                            idsWithSameHash.add(record_id);
+//                        } else {
+//                            map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
+//                        }
+//                    }
+//                }
+//            }    catch (SQLException e) {
+//                // TODO Exception Handling
+//                e.printStackTrace();
+//                throw new RuntimeException("Error while trying to scan database entries");
+//            }
+//
+//            saveAuxMapToFile(map);
+//        }
+//    }
+//
+//    public static void hookRemoveRecord(ResultSet rs) {
+//
+//        JSONObject auxmapManager = getOrCreateMapManager();
+//        for (Object filename : auxmapManager.keySet()) {
+//            AuxMap map = loadAuxMapFromFilename((String) filename);
+//            Set<MatchFieldEnum> attrs = map.attrs;
+//
+//            try {
+//                while (rs.next()) {
+//                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
+//
+//                    boolean include_entry = true;
+//                    for (MatchFieldEnum mfield : attrs) {
+//                        try {
+//                            Object mfield_val = mfield.getFieldValues(rs);
+//                            attr_map.put(mfield, mfield_val);
+//                        } catch (UnknownValueException e) {
+//                            include_entry = false;
+//                            break;
+//                        }
+//                    }
+//
+//                    if (!include_entry) {
+//                        continue;
+//                    } else {
+//                        long record_id;
+//                        try {
+//                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
+//                        } catch (UnknownValueException e) {
+//                            e.printStackTrace();
+//                            throw new RuntimeException("Obtained record orphaned from any patient uid");
+//                        }
+//                        HashCode hash = HashUtils.hashFields(attr_map);
+//
+//                        map.getIdToHashMap().remove(record_id);
+//                        map.getHashToIdMap().remove(hash);
+//                    }
+//                }
+//            } catch (SQLException e) {
+//                // TODO Exception Handling
+//                e.printStackTrace();
+//                throw new RuntimeException("Error while trying to scan database entries");
+//            }
+//            saveAuxMapToFile(map);
+//
+//        }
+//    }
 }

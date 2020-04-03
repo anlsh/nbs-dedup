@@ -1,7 +1,7 @@
 package abstraction;
 
 import exceptions.BadTableObjectException;
-import exceptions.UnknownValueException;
+import utils.ResultType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,14 +48,14 @@ public enum MatchFieldEnum {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
-        @Override public Set<Object> getFieldValues(ResultSet rs) throws SQLException, UnknownValueException {
-            Set<Object> lastFours = new HashSet<>();
-            for (Object ssn : SSN.getFieldValues(rs)) {
-                String ssnStr = (String) ssn;
-                lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
-            }
-            return lastFours;
-        }
+//        @Override public Set<Object> getFieldValues(ResultSet rs) throws SQLException, UnknownValueException {
+//            Set<Object> lastFours = new HashSet<>();
+//            for (Object ssn : SSN.getFieldValues(rs)) {
+//                String ssnStr = (String) ssn;
+//                lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
+//            }
+//            return lastFours;
+//        }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person";}
     },
@@ -114,7 +114,7 @@ public enum MatchFieldEnum {
      * @return
      * @throws SQLException
      */
-    public Set<Object> getFieldValues(ResultSet rs) throws SQLException, BadTableObjectException, UnknownValueException {
+    public ResultType getFieldValues(ResultSet rs) throws SQLException, BadTableObjectException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
@@ -122,23 +122,23 @@ public enum MatchFieldEnum {
         Object tableObj = rs.getObject(
                 MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
         );
+
         if (tableObj == null) {
-            throw new UnknownValueException(null, this);
+            return new ResultType(null, true);
         }
-        // Check to see if it is a collection of the relevant type: if so, then return the collection
-        if (Collection.class.isInstance(tableObj)) {
+        else if (Collection.class.isInstance(tableObj)) {
             for (Object o : (Collection) tableObj) {
                 if (!this.getFieldType().isInstance(o)) {
                     throw new BadTableObjectException(o, this);
                 }
             }
-            return new HashSet<>((Collection) tableObj);
+            return new ResultType(new HashSet<>((Collection) tableObj), false);
         }
         // Check to se if this is a single object of the specified type: if so, then promote to set & return
         else if (this.getFieldType().isInstance(tableObj)) {
             HashSet ret = new HashSet();
             ret.add(tableObj);
-            return ret;
+            return new ResultType(ret, false);
         } else {
             throw new BadTableObjectException(tableObj, this);
         }

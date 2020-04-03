@@ -2,17 +2,15 @@ package abstraction;
 
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import exceptions.UnknownValueException;
 import hashing.HashUtils;
+import utils.BlockingThreadPool;
 import utils.ConcurrentSet;
+import utils.ResultType;
 
 public class NBS_DB {
 
@@ -43,12 +41,8 @@ public class NBS_DB {
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
         for (MatchFieldEnum mf : attrs) {
-            try {
-                ret.put(mf, mf.getFieldValues(rs));
-            } catch (UnknownValueException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Fields are null where they shouldn't be...");
-            }
+            ResultType result = mf.getFieldValues(rs);
+            ret.put(mf, result.values);
         }
         return ret;
     }
@@ -121,97 +115,114 @@ public class NBS_DB {
         String queryString = getSQLQueryForAllEntries(attrs, null);
         try {
             Statement query = conn.createStatement();
+            query.setFetchSize(Constants.fetch_size);
             rs = query.executeQuery(queryString);
+            rs.setFetchSize(Constants.fetch_size);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not connect to and query SQL database");
         }
 
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
+        ExecutorService executor = new BlockingThreadPool(num_threads, Constants.blocking_q_size);
 
         // The sets referred to in the type signature below are in fact synchronized.
         ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
-        class HashDatabaseEntry implements Runnable {
-            /**
-             * Represents a job which will calculate the hash of the given attribute map and update the relevant
-             * maps for the final AuxMap
-             */
-            Map<MatchFieldEnum, Object> attr_map;
-            long uid;
-            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
-                this.uid = uid;
-                this.attr_map = attr_map;
-            }
-
-            @Override
-            public void run() {
-                HashCode hash = HashUtils.hashFields(attr_map);
-
-                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
-                if (currentIdToHashes != null) {
-                    currentIdToHashes.add(hash);
-                } else {
-                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
-                }
-
-                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                if (idsWithSameHash != null) {
-                    idsWithSameHash.add(uid);
-                } else {
-                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
-                }
-            }
-        }
+//        class HashDatabaseEntry implements Runnable {
+//            /**
+//             * Represents a job which will calculate the hash of the given attribute map and update the relevant
+//             * maps for the final AuxMap
+//             */
+//            Map<MatchFieldEnum, Object> attr_map;
+//            long uid;
+//            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
+//                this.uid = uid;
+//                this.attr_map = attr_map;
+//            }
+//
+//            @Override
+//            public void run() {
+//
+//
+//                try {
+//                    Thread.sleep(1);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//
+//            }
+//        }
 
         // Loop over the items in the ResultSet, submitting them to a thread pool to be hashed in a concurrent fashion.
-        // TODO In the case that jobs are added to the queue faster than they can be processed, it is possible that
-        // calls to the ThreadPoolExecutor's execute function should block until there are less than <n> items in
-        // its job queue. Otherwise, this function may essentially load the entire database into RAM
 
         ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
 
+        long total_entries = 0;
+        long valid_entries = 0;
         try {
             while (rs.next()) {
-
+                total_entries += 1;
                 List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
                 boolean include_entry = true;
 
+                long uid = (long) MatchFieldEnum.UID.getFieldValues(rs).values.toArray()[0];
+
                 for (MatchFieldEnum mfield : attrsAsList) {
-                    try {
-                        valuesList.add(mfield.getFieldValues(rs));
-                    } catch (UnknownValueException e) {
+                    ResultType result = mfield.getFieldValues(rs);
+                    if (result.unknown) {
                         include_entry = false;
                         break;
+                    } else {
+                        valuesList.add(result.values);
                     }
                 }
 
                 if (include_entry) {
-                    long record_id;
-                    try {
-                        record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
-                    } catch (UnknownValueException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException("Obtained record orphaned from any patient uid");
-                    }
+                    valid_entries += 1;
                     for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
-                        ConcurrentMap<MatchFieldEnum, Object> attr_map = new ConcurrentHashMap<>();
+                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {
                             attr_map.put(attrsAsList.get(i), specific_vals.get(i));
                         }
-                        executor.execute(new HashDatabaseEntry(record_id, attr_map));
+                        executor.execute(
+                                () -> {
+//                                    long wait_millis = 1;
+//                                    long start_millis = System.currentTimeMillis();
+//                                    while (System.currentTimeMillis() - start_millis < wait_millis) {
+//
+//                                    }
+
+
+                                    HashCode hash = HashUtils.hashFields(attr_map);
+                                    Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
+                                    if (currentIdToHashes != null) {
+                                        currentIdToHashes.add(hash);
+                                    } else {
+                                        idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
+                                    }
+
+                                    Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                                    if (idsWithSameHash != null) {
+                                        idsWithSameHash.add(uid);
+                                    } else {
+                                        hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
+                                    }
+                                }
+                        );
                     }
                 }
             }
         } catch (SQLException e) {
-            // TODO Exception Handling
             e.printStackTrace();
             throw new RuntimeException("Error while trying to scan database entries");
         }
+//        System.out.println("The auxmap includes " + valid_entries + " out of " + total_entries);
 
         executor.shutdown();
         AuxMap toRet = new AuxMap(attrs, idToHash, hashToIDs);
+        // TODO uncomment this line below!
         toRet.ensureThreadSafe();
         return toRet;
     }
