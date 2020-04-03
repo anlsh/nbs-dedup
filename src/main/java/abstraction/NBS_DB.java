@@ -129,8 +129,8 @@ public class NBS_DB {
 
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
 
-        ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         // The sets referred to in the type signature below are in fact synchronized.
+        ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
         class HashDatabaseEntry implements Runnable {
@@ -199,8 +199,8 @@ public class NBS_DB {
                         ConcurrentMap<MatchFieldEnum, Object> attr_map = new ConcurrentHashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {
                             attr_map.put(attrsAsList.get(i), specific_vals.get(i));
-                            executor.execute(new HashDatabaseEntry(record_id, attr_map));
                         }
+                        executor.execute(new HashDatabaseEntry(record_id, attr_map));
                     }
                 }
             }
