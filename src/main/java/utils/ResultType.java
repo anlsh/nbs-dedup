@@ -1,13 +1,11 @@
 package utils;
 
-import java.util.Set;
-
 public class ResultType {
-    public Set<Object> values;
+    public Object value;
     public boolean unknown;
 
-    public ResultType(Set<Object> result, boolean unknownValue) {
-        this.values = result;
+    public ResultType(Object result, boolean unknownValue) {
+        this.value = result;
         this.unknown = unknownValue;
     }
 }

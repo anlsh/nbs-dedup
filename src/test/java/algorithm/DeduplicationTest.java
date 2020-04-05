@@ -18,7 +18,6 @@ import static org.junit.Assert.*;
 
 public class DeduplicationTest {
     private NBS_DB db;
-    Stopwatch timer;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, IOException {
@@ -34,12 +33,7 @@ public class DeduplicationTest {
                 MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.LAST_NAME
         ));
-        timer.start();
         List<Set<Set<Long>>> res = Deduplication.getMatching(db, config);
-        timer.stop();
-
-        System.out.println("Test completed in " + timer);
-        System.out.println(res);
     }
 
     @Test

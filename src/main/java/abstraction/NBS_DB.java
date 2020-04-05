@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
 import utils.BlockingThreadPool;
@@ -41,8 +40,8 @@ public class NBS_DB {
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
         for (MatchFieldEnum mf : attrs) {
-            ResultType result = mf.getFieldValues(rs);
-            ret.put(mf, result.values);
+            ResultType result = mf.getFieldValue(rs);
+            ret.put(mf, result.value);
         }
         return ret;
     }
@@ -135,46 +134,40 @@ public class NBS_DB {
 
         try {
             while (rs.next()) {
-                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                 boolean include_entry = true;
 
-                long uid = (long) MatchFieldEnum.UID.getFieldValues(rs).values.toArray()[0];
+                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).value;
 
                 for (MatchFieldEnum mfield : attrsAsList) {
-                    ResultType result = mfield.getFieldValues(rs);
+                    ResultType result = mfield.getFieldValue(rs);
                     if (result.unknown) {
                         include_entry = false;
                         break;
                     } else {
-                        valuesList.add(result.values);
+                        attr_map.put(mfield, result.value);
                     }
                 }
 
                 if (include_entry) {
-                    for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
-                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-                        for (int i = 0; i < attrs.size(); ++i) {
-                            attr_map.put(attrsAsList.get(i), specific_vals.get(i));
-                        }
-                        executor.execute(
-                                () -> {
-                                    HashCode hash = HashUtils.hashFields(attr_map);
-                                    Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
-                                    if (currentIdToHashes != null) {
-                                        currentIdToHashes.add(hash);
-                                    } else {
-                                        idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
-                                    }
-
-                                    Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                                    if (idsWithSameHash != null) {
-                                        idsWithSameHash.add(uid);
-                                    } else {
-                                        hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
-                                    }
+                    executor.execute(
+                            () -> {
+                                HashCode hash = HashUtils.hashFields(attr_map);
+                                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
+                                if (currentIdToHashes != null) {
+                                    currentIdToHashes.add(hash);
+                                } else {
+                                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
                                 }
-                        );
-                    }
+
+                                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                                if (idsWithSameHash != null) {
+                                    idsWithSameHash.add(uid);
+                                } else {
+                                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
+                                }
+                            }
+                    );
                 }
             }
         } catch (SQLException e) {

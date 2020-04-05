@@ -114,7 +114,7 @@ public enum MatchFieldEnum {
      * @return
      * @throws SQLException
      */
-    public ResultType getFieldValues(ResultSet rs) throws SQLException, BadTableObjectException {
+    public ResultType getFieldValue(ResultSet rs) throws SQLException, BadTableObjectException {
         if (getRequiredColumnsArray().length != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
                     "depending on multiple fields");
@@ -126,19 +126,8 @@ public enum MatchFieldEnum {
         if (tableObj == null) {
             return new ResultType(null, true);
         }
-        else if (Collection.class.isInstance(tableObj)) {
-            for (Object o : (Collection) tableObj) {
-                if (!this.getFieldType().isInstance(o)) {
-                    throw new BadTableObjectException(o, this);
-                }
-            }
-            return new ResultType(new HashSet<>((Collection) tableObj), false);
-        }
-        // Check to se if this is a single object of the specified type: if so, then promote to set & return
         else if (this.getFieldType().isInstance(tableObj)) {
-            HashSet ret = new HashSet();
-            ret.add(tableObj);
-            return new ResultType(ret, false);
+            return new ResultType(tableObj, false);
         } else {
             throw new BadTableObjectException(tableObj, this);
         }
