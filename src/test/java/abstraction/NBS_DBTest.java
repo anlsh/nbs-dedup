@@ -18,7 +18,6 @@ public class NBS_DBTest {
 //        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
 //                Constants.DB_USERNAME, Constants.DB_PASSWORD);
         db = new NBS_DB("test_db");
-        timer = Stopwatch.createUnstarted();
     }
 
     @Test
