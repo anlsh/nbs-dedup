@@ -129,41 +129,12 @@ public class NBS_DB {
         ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
-//        class HashDatabaseEntry implements Runnable {
-//            /**
-//             * Represents a job which will calculate the hash of the given attribute map and update the relevant
-//             * maps for the final AuxMap
-//             */
-//            Map<MatchFieldEnum, Object> attr_map;
-//            long uid;
-//            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
-//                this.uid = uid;
-//                this.attr_map = attr_map;
-//            }
-//
-//            @Override
-//            public void run() {
-//
-//
-//                try {
-//                    Thread.sleep(1);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//            }
-//        }
-
         // Loop over the items in the ResultSet, submitting them to a thread pool to be hashed in a concurrent fashion.
 
         ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
 
-        long total_entries = 0;
-        long valid_entries = 0;
         try {
             while (rs.next()) {
-                total_entries += 1;
                 List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
                 boolean include_entry = true;
 
@@ -180,7 +151,6 @@ public class NBS_DB {
                 }
 
                 if (include_entry) {
-                    valid_entries += 1;
                     for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
                         Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                         for (int i = 0; i < attrs.size(); ++i) {
@@ -188,13 +158,6 @@ public class NBS_DB {
                         }
                         executor.execute(
                                 () -> {
-//                                    long wait_millis = 1;
-//                                    long start_millis = System.currentTimeMillis();
-//                                    while (System.currentTimeMillis() - start_millis < wait_millis) {
-//
-//                                    }
-
-
                                     HashCode hash = HashUtils.hashFields(attr_map);
                                     Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
                                     if (currentIdToHashes != null) {
@@ -218,11 +181,9 @@ public class NBS_DB {
             e.printStackTrace();
             throw new RuntimeException("Error while trying to scan database entries");
         }
-//        System.out.println("The auxmap includes " + valid_entries + " out of " + total_entries);
 
         executor.shutdown();
         AuxMap toRet = new AuxMap(attrs, idToHash, hashToIDs);
-        // TODO uncomment this line below!
         toRet.ensureThreadSafe();
         return toRet;
     }
