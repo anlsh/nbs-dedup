@@ -13,7 +13,9 @@ public class NBS_DBTest {
 
     private NBS_DB db;
     private String personSchema;
+    private String personNameSchema;
     private String personColumns;
+    private String personNameColumns;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, ClassNotFoundException {
@@ -46,6 +48,22 @@ public class NBS_DBTest {
         personColumns = cols.toString();
         db.createTempTable("Person", personSchema);
         //TODO add other tables like the one referenced in MatchFieldEnum.OTHER_TABLE_NAME
+        schema = new StringBuilder();
+        cols = new StringBuilder();
+        schema.append(Constants.COL_PERSON_UID);
+        cols.append(Constants.COL_PERSON_UID);
+        schema.append(" BIGINT NOT NULL, ");
+        cols.append(", ");
+        schema.append(Constants.COL_FIRST_NAME);
+        cols.append(Constants.COL_FIRST_NAME);
+        schema.append(" VARCHAR(50), ");
+        cols.append(", ");
+        schema.append(Constants.COL_LAST_NAME);
+        cols.append(Constants.COL_LAST_NAME);
+        schema.append(" VARCHAR(50) ");
+        personNameSchema = schema.toString();
+        personNameColumns = cols.toString();
+        db.createTempTable("Person_name", personNameSchema);
     }
 
     private void populateTables() throws SQLException {
@@ -53,6 +71,9 @@ public class NBS_DBTest {
         db.insertRow("Person", personColumns, "124, 'Jane', 'Schmoe', '999-99-9990'");
         db.insertRow("Person", personColumns, "125, 'Joe', 'Pesci', '999-99-9999'");
         db.insertRow("Person", personColumns, "126, 'Jane', 'Doe', '999-99-9990'");
+
+        db.insertRow("Person_name", personNameColumns, "123, 'Joe', 'Schmoe'"); //TODO add more records to both tables
+        db.insertRow("Person_name", personNameColumns, "124, 'Jane', 'Schmoe'"); //TODO add more records to both tables
     }
 
     @Test
