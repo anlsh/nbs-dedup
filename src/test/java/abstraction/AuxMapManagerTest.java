@@ -9,32 +9,32 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class AuxMapManagerTest {
 
     private NBS_DB db;
-    private final String testDataDirectory = "/tmp/nbs-data/";
 
     @Before
     public void setupDatabaseConnection() throws IOException, SQLException {
         db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD);
-        AuxMapManager.setDataRoot(testDataDirectory);
-        FileUtils.deleteDirectory(new File(testDataDirectory));
+        FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));
     }
 
     @Test
     public void testAuxMapFilenameConstruction() {
         String auxFileName = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
         System.out.println(auxFileName);
-        assert auxFileName.equals(testDataDirectory + "FIRST_NAME_.auxmap");
+        assert auxFileName.equals(AuxMapManager.getDataRoot() + "-1921453883.auxmap");
     }
 
     @Test
+
+
     public void testGetAuxMap() throws SQLException {
         Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME,
                 MatchFieldEnum.OTHER_TABLE_NAME);
@@ -49,10 +49,13 @@ public class AuxMapManagerTest {
 
         long MAGIC_KEY = 7;
 
-        Map<Long, Set<HashCode>> dummyData = new HashMap<>();
-        dummyData.put(MAGIC_KEY, null);
+        ConcurrentMap<Long, Set<HashCode>> dummyData = new ConcurrentHashMap<>();
+        dummyData.put(MAGIC_KEY, new HashSet<>());
         Set<MatchFieldEnum> empty = new HashSet<>();
-        AuxMap emptyAux = new AuxMap(empty, dummyData, null);
+
+        ConcurrentMap<HashCode, Set<Long>> dummyHashToId = new ConcurrentHashMap<>();
+
+        AuxMap emptyAux = new AuxMap(empty, dummyData, dummyHashToId);
 
         assert !AuxMapManager.auxMapExists(empty);
         AuxMapManager.saveAuxMapToFile(emptyAux);
@@ -61,7 +64,7 @@ public class AuxMapManagerTest {
         AuxMap loadedMap = AuxMapManager.loadAuxMapFromFile(empty);
         assert loadedMap.attrs.equals(empty);
         assert loadedMap.idToHashMap.size() == 1;
-        assert loadedMap.idToHashMap.get(MAGIC_KEY) == null;
+        assert loadedMap.idToHashMap.get(MAGIC_KEY).isEmpty();
 
         AuxMapManager.deleteAuxMap(empty);
         assert !AuxMapManager.auxMapExists(empty);

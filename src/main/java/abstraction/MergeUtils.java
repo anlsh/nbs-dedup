@@ -43,27 +43,6 @@ public class MergeUtils {
         }
 
         return ret;
-
-        /*
-        Set<Set<Long>> toRemove = new HashSet<>();
-        Set<Set<Long>> mergedSets = new HashSet<>();
-        Set<Set<Long>> returnSets = new HashSet<>();
-        for(Set<Set<Long>> setOfGroups: idsToSetsOfGroups.values()) {
-            if(setOfGroups.size() > 1) {
-                Set<Long> mergedGroup = new HashSet<>();
-                for(Set<Long> group : setOfGroups) {
-                    mergedGroup.addAll(group);
-                    toRemove.add(group);
-                }
-                mergedSets.add(mergedGroup);
-            } else {
-                for(Set<Long> group : setOfGroups) returnSets.add(group);
-            }
-        }
-        returnSets.removeAll(toRemove);
-        returnSets.addAll(mergedSets);
-        return returnSets;
-         */
     }
 
     private static Set<Long> merge(Set<Set<Long>> setOfGroups) {

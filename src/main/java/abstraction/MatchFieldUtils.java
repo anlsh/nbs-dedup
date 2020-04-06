@@ -4,7 +4,14 @@ import java.util.*;
 
 public class MatchFieldUtils {
 
+
     private static List<MatchFieldEnum> sortedMfields = null;
+
+    /** For utility purposes, it's often useful throughout the codebase to have MatchFieldEnum's values in some
+     *  arbitrary but consistent order. We use the sorted order, and store it in a variable to avoid having to
+     *  unnecessarily re-sort
+     * @return
+     */
     public static List<MatchFieldEnum> getSortedMfields() {
         if (sortedMfields == null) {
             List<MatchFieldEnum> thingy = Arrays.asList(MatchFieldEnum.values());

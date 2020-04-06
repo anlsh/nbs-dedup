@@ -13,5 +13,14 @@ public class Constants {
     public static final String WEB_SERVER = "localhost";
     public static final String WEB_PORT = "8080";
     public static final String GET_CONFIGS_REQUEST = "/config/";
+    public static final String PRIMARY_TABLE_NAME = "Person";
+
+    // Paralellization Things
+
     public static final int NUM_AUXMAP_THREADS = 4;
+    // TODO I don't think this variable actually affects the time even though it apparently really should
+    // See https://stackoverflow.com/questions/17744090/iterating-a-resultset-using-the-jdbc-for-oracle-takes-a-lot-of-time-about-16s
+    public static final int fetch_size = 10;
+
+    public static final int blocking_q_size = 10;
 }

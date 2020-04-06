@@ -2,15 +2,14 @@ package abstraction;
 
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
+import utils.BlockingThreadPool;
 import utils.ConcurrentSet;
+import utils.ResultType;
 
 import org.h2.tools.Server;
 
@@ -54,15 +53,23 @@ public class NBS_DB {
         conn.createStatement().executeUpdate(insertString);
     }
 
+    /** When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
+     * that the match is in fact genuine. This function calculates the MatchField values for the given person_uid and
+     * returns them in a dictionary
+     * @param id
+     * @param attrs
+     * @return
+     * @throws SQLException
+     */
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
-        // When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
-        // that the original information matches.
-        Map<MatchFieldEnum, Object> ret = new HashMap<>();
+        // TODO I don't know if this does what we need it to in light of the automatic multiple-values promotion
+        ConcurrentMap<MatchFieldEnum, Object> ret = new ConcurrentHashMap<>();
         String queryString = getSQLQueryForAllEntries(attrs, id);
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
         for (MatchFieldEnum mf : attrs) {
-            ret.put(mf, mf.getFieldValue(rs));
+            ResultType result = mf.getFieldValue(rs);
+            ret.put(mf, result.value);
         }
         return ret;
     }
@@ -100,19 +107,20 @@ public class NBS_DB {
         queryString += String.join(", ", tableColumns);
         queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
 
-        // TODO Don't hardcode the primary table name!
         // If only fetching for a single id, add that constraint to the query
         List<String> where_clauses = new ArrayList<>();
         if (uid != null) {
-            where_clauses.add("Person." + Constants.COL_PERSON_UID + " = " + uid);
+            where_clauses.add(MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
+                    + " = " + uid);
         }
         // Align the columns from each table by the person_uid column.
         if(tableNameMap.keySet().size() > 1) {
             Iterator<String> iter = tableNameMap.keySet().iterator();
-            String primaryTableName = iter.next();
             while (iter.hasNext()) {
-                //TODO make a map from each table to the name of its Person ID column, use that instead of Constants.COL_PERSON_UID all the time
-                where_clauses.add(primaryTableName + "." + Constants.COL_PERSON_UID + " = " + iter.next() + "." + Constants.COL_PERSON_UID);
+                where_clauses.add(
+                        MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
+                        + " = "
+                        + MatchFieldUtils.getSQLQualifiedColName(iter.next(), Constants.COL_PERSON_UID));
             }
         }
         if (where_clauses.size() > 0) {
@@ -132,91 +140,73 @@ public class NBS_DB {
         // Obtain a ResultSet object through which to access the database
         ResultSet rs;
         String queryString = getSQLQueryForAllEntries(attrs, null);
-
         try {
             Statement query = conn.createStatement();
+            query.setFetchSize(Constants.fetch_size);
             rs = query.executeQuery(queryString);
+            rs.setFetchSize(Constants.fetch_size);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Could not connect to and query SQL database");
         }
 
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(num_threads);
-        Map<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
+        ExecutorService executor = new BlockingThreadPool(num_threads, Constants.blocking_q_size);
+
         // The sets referred to in the type signature below are in fact synchronized.
-        Map<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
-
-        class HashDatabaseEntry implements Runnable {
-            /**
-             * Represents a job which will calculate the hash of the given attribute map and update the relevant
-             * maps for the final AuxMap
-             */
-            Map<MatchFieldEnum, Object> attr_map;
-            long uid;
-            HashDatabaseEntry(long uid, Map<MatchFieldEnum, Object> attr_map) {
-                this.uid = uid;
-                this.attr_map = attr_map;
-            }
-
-            @Override
-            public void run() {
-                HashCode hash = HashUtils.hashFields(attr_map);
-
-                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
-                if (currentIdToHashes != null) {
-                    currentIdToHashes.add(hash);
-                } else {
-                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
-                }
-
-                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
-                if (idsWithSameHash != null) {
-                    idsWithSameHash.add(uid);
-                } else {
-                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
-                }
-            }
-        }
+        ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
+        ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();
 
         // Loop over the items in the ResultSet, submitting them to a thread pool to be hashed in a concurrent fashion.
-        // TODO In the case that jobs are added to the queue faster than they can be processed, it is possible that
-        // calls to the ThreadPoolExecutor's execute function should block until there are less than <n> items in
-        // its job queue. Otherwise, this function may essentially load the entire database into RAM
+
+        ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
+
         try {
             while (rs.next()) {
-                ArrayList<MatchFieldEnum> attrsAsList = new ArrayList<>(attrs);
-                List<Set<Object>> valuesList = new ArrayList<>(attrs.size());
-
+                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                 boolean include_entry = true;
 
+                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).value;
+
                 for (MatchFieldEnum mfield : attrsAsList) {
-                    Object mfield_val = mfield.getFieldValue(rs);
-                    if (mfield.isUnknownValue(mfield_val)) {
+                    ResultType result = mfield.getFieldValue(rs);
+                    if (result.unknown) {
                         include_entry = false;
                         break;
+                    } else {
+                        attr_map.put(mfield, result.value);
                     }
-                    valuesList.add(mfield.getFieldValue(rs));
                 }
 
                 if (include_entry) {
-                    long record_id = (long) MatchFieldEnum.UID.getFieldValue(rs).toArray()[0];
-                    for (List<Object> specific_vals : Sets.cartesianProduct(valuesList)) {
-                        Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-                        for (int i = 0; i < attrs.size(); ++i) {
-                            attr_map.put(attrsAsList.get(i), specific_vals.get(i));
-                            executor.execute(new HashDatabaseEntry(record_id, attr_map));
-                        }
-                    }
+                    executor.execute(
+                            () -> {
+                                HashCode hash = HashUtils.hashFields(attr_map);
+                                Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
+                                if (currentIdToHashes != null) {
+                                    currentIdToHashes.add(hash);
+                                } else {
+                                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
+                                }
+
+                                Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
+                                if (idsWithSameHash != null) {
+                                    idsWithSameHash.add(uid);
+                                } else {
+                                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
+                                }
+                            }
+                    );
                 }
             }
-            executor.shutdown();
         } catch (SQLException e) {
-            // TODO Exception Handling
             e.printStackTrace();
             throw new RuntimeException("Error while trying to scan database entries");
         }
 
-        return new AuxMap(attrs, idToHash, hashToIDs);
+        executor.shutdown();
+        AuxMap toRet = new AuxMap(attrs, idToHash, hashToIDs);
+        toRet.ensureThreadSafe();
+        return toRet;
     }
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
         return constructAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
