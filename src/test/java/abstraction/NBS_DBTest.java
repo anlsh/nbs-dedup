@@ -29,7 +29,7 @@ public class NBS_DBTest {
         StringBuilder cols = new StringBuilder();
         schema.append(Constants.COL_PERSON_UID);
         cols.append(Constants.COL_PERSON_UID);
-        schema.append(" INT NOT NULL, "); //TODO write a member of MatchField that gives the schema for each field
+        schema.append(" BIGINT NOT NULL, "); //TODO write a member of MatchField that gives the schema for each field
         cols.append(", ");
         schema.append(Constants.COL_FIRST_NAME);
         cols.append(Constants.COL_FIRST_NAME);
