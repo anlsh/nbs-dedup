@@ -12,12 +12,47 @@ import java.util.Set;
 public class NBS_DBTest {
 
     private NBS_DB db;
+    private String personSchema;
+    private String personColumns;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, ClassNotFoundException {
 //        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
 //                Constants.DB_USERNAME, Constants.DB_PASSWORD);
         db = new NBS_DB("test_db");
+        createTables();
+        populateTables();
+    }
+
+    private void createTables() throws SQLException {
+        StringBuilder schema = new StringBuilder();
+        StringBuilder cols = new StringBuilder();
+        schema.append(Constants.COL_PERSON_UID);
+        cols.append(Constants.COL_PERSON_UID);
+        schema.append(" INT NOT NULL, "); //TODO write a member of MatchField that gives the schema for each field
+        cols.append(", ");
+        schema.append(Constants.COL_FIRST_NAME);
+        cols.append(Constants.COL_FIRST_NAME);
+        schema.append(" VARCHAR(50), ");
+        cols.append(", ");
+        schema.append(Constants.COL_LAST_NAME);
+        cols.append(Constants.COL_LAST_NAME);
+        schema.append(" VARCHAR(50), ");
+        cols.append(", ");
+        schema.append(Constants.COL_SSN);
+        cols.append(Constants.COL_SSN);
+        schema.append(" VARCHAR(12) ");
+        personSchema = schema.toString();
+        personColumns = cols.toString();
+        db.createTempTable("Person", personSchema);
+        //TODO add other tables like the one referenced in MatchFieldEnum.OTHER_TABLE_NAME
+    }
+
+    private void populateTables() throws SQLException {
+        db.insertRow("Person", personColumns, "123, 'Joe', 'Schmoe', '999-99-9999'");
+        db.insertRow("Person", personColumns, "124, 'Jane', 'Schmoe', '999-99-9990'");
+        db.insertRow("Person", personColumns, "125, 'Joe', 'Pesci', '999-99-9999'");
+        db.insertRow("Person", personColumns, "126, 'Jane', 'Doe', '999-99-9990'");
     }
 
     @Test
