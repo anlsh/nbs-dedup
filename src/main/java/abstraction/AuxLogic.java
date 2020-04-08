@@ -11,18 +11,12 @@ import utils.BlockingThreadPool;
 import utils.ConcurrentSet;
 import utils.ResultType;
 
-public class NBS_DB {
+public class AuxLogic {
 
-    public Connection conn;
+    Connection conn;
 
-    public NBS_DB(String server, int port, String dbName, String username, String password) throws SQLException {
-        conn = DriverManager.getConnection(
-                "jdbc:sqlserver://" + server + ":" + port
-                        + ";databaseName=" + dbName
-                        + ";user=" + username
-                        +  ";password=" + password
-        );
-        conn.setReadOnly(true);
+    public AuxLogic(Connection conn) {
+        this.conn = conn;
     }
 
     /** When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
@@ -122,7 +116,6 @@ public class NBS_DB {
         }
 
         ExecutorService executor = new BlockingThreadPool(num_threads, Constants.blocking_q_size);
-
         // The sets referred to in the type signature below are in fact synchronized.
         ConcurrentMap<Long, Set<HashCode>> idToHash = new ConcurrentHashMap<>();
         ConcurrentMap<HashCode, Set<Long>> hashToIDs = new ConcurrentHashMap<>();

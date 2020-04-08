@@ -2,13 +2,15 @@ package abstraction;
 
 import org.h2.tools.Server;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DummyDataTest {
-    private class DummyDataDB extends NBS_DB {
+    private class DummyDataConnAux {
         private Server server;
-        public DummyDataDB(String name) throws SQLException, ClassNotFoundException {
+        Connection conn;
+        public DummyDataConnAux(String name) throws SQLException, ClassNotFoundException {
             server = Server.createTcpServer("-tcpAllowOthers").start();
             Class.forName("org.h2.Driver"); //I'm not sure why this needs to be here
             conn = DriverManager.getConnection("jdbc:h2:tcp://localhost/~/" + name, "sa", "");

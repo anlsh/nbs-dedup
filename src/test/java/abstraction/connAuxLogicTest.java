@@ -1,6 +1,5 @@
 package abstraction;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Before;
@@ -9,19 +8,17 @@ import org.junit.Test;
 import java.sql.SQLException;
 import java.util.Set;
 
-public class NBS_DBTest {
+public class connAuxLogicTest {
 
-    private NBS_DB db;
-    private String personSchema;
-    private String personNameSchema;
-    private String personColumns;
-    private String personNameColumns;
+    private AuxLogic db;
+//    private String personSchema;
+//    private String personNameSchema;
+//    private String personColumns;
+//    private String personNameColumns;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, ClassNotFoundException {
-//        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
-//                Constants.DB_USERNAME, Constants.DB_PASSWORD);
-        db = new NBS_DB("test_db");
+        db = new AuxLogic("test_db");
         createTables();
         populateTables();
     }
@@ -74,21 +71,6 @@ public class NBS_DBTest {
 
         db.insertRow("Person_name", personNameColumns, "123, 'Joe', 'Schmoe'"); //TODO add more records to both tables
         db.insertRow("Person_name", personNameColumns, "124, 'Jane', 'Schmoe'"); //TODO add more records to both tables
-    }
-
-    @Test
-    public void testCreateAuxMap() {
-        AuxMap aux = db.constructAuxMap(Sets.newHashSet(Lists.newArrayList(
-                MatchFieldEnum.FIRST_NAME,
-                MatchFieldEnum.SSN,
-                MatchFieldEnum.OTHER_TABLE_NAME
-        )));
-
-        assert (aux.hashToIdMap != null);
-        assert (aux.idToHashMap != null);
-
-        assert aux.hashToIdMap.size() > 0;
-        assert aux.idToHashMap.size() > 0;
     }
 
     @Test

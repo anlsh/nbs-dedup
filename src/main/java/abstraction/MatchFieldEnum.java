@@ -28,14 +28,14 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
 //        @Override public boolean isUnknownValue(Object o) { return o == null; }
-        @Override public String getTableName() {return "Person";}
+        @Override public String getTableName() {return "Person_name";}
     },
     LAST_NAME {
         @Override public String getHumanReadableName() { return "Last Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
 //        @Override public boolean isUnknownValue(Object o) { return o == null; }
-        @Override public String getTableName() {return "Person";}
+        @Override public String getTableName() {return "Person_name";}
     },
     SSN {
         @Override public String getHumanReadableName() { return "Social Security Number"; }
@@ -48,24 +48,16 @@ public enum MatchFieldEnum {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
-//        @Override public Set<Object> getFieldValues(ResultSet rs) throws SQLException, UnknownValueException {
-//            Set<Object> lastFours = new HashSet<>();
-//            for (Object ssn : SSN.getFieldValues(rs)) {
-//                String ssnStr = (String) ssn;
-//                lastFours.add(ssnStr == null ? null : ssnStr.substring(ssnStr.length() - 4, ssnStr.length()));
-//            }
-//            return lastFours;
-//        }
+        @Override public ResultType getFieldValue(ResultSet rs) throws SQLException {
+            ResultType ssn = SSN.getFieldValue(rs);
+            if (ssn.unknown) { return new ResultType(null, true); }
+            else {
+                String ssnStr = ((String) ssn.value);
+                return new ResultType(ssnStr.substring(ssnStr.length() - 4), false);
+            }
+        }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person";}
-    },
-
-    OTHER_TABLE_NAME {
-        @Override public MatchFieldEnum getParent() { return null; }
-        @Override public String getHumanReadableName() { return "Name but from the person table"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{"first_nm"}; }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() { return "Person_name"; }
     };
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false

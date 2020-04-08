@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,12 +17,13 @@ import java.util.concurrent.ConcurrentMap;
 
 public class AuxMapManagerTest {
 
-    private NBS_DB db;
+    private AuxLogic db;
 
     @Before
     public void setupDatabaseConnection() throws IOException, SQLException {
-        db = new NBS_DB(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
+        Connection nbsConn = NBSConnection.getNBSConnection(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD);
+        db = new AuxLogic(nbsConn);
         FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));
     }
 
@@ -36,8 +38,7 @@ public class AuxMapManagerTest {
 
 
     public void testGetAuxMap() throws SQLException {
-        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME,
-                MatchFieldEnum.OTHER_TABLE_NAME);
+        Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
         AuxMapManager.getAuxMap(db, mfields, false);

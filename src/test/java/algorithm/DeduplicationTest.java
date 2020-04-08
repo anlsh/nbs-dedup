@@ -1,9 +1,7 @@
 package algorithm;
 
-import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
-import abstraction.NBS_DB;
-import com.google.common.base.Stopwatch;
+import abstraction.AuxLogic;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,14 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-
 public class DeduplicationTest {
-    private NBS_DB db;
+    private AuxLogic db;
 
     @Before
     public void setupDatabaseConnection() throws SQLException, IOException {
-        db = new NBS_DB("localhost", 1433, "ODS_PRIMARY_DATA01",
+        db = new AuxLogic("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t");
     }
 

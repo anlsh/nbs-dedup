@@ -1,7 +1,6 @@
 package algorithm;
 
 import abstraction.*;
-import com.google.common.hash.HashCode;
 
 import java.util.*;
 
@@ -11,7 +10,7 @@ public class Deduplication {
 
 
     // Gets duplicates given a list of various configurations
-    public static List<Set<Set<Long>>> getMatching(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    public static List<Set<Set<Long>>> getMatching(AuxLogic db, List<Set<MatchFieldEnum>> config) throws SQLException {
 
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
@@ -42,7 +41,7 @@ public class Deduplication {
         return allMatches;
     }
 
-    public static Set<Set<Long>> getMatchingMerged(NBS_DB db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    public static Set<Set<Long>> getMatchingMerged(AuxLogic db, List<Set<MatchFieldEnum>> config) throws SQLException {
         return MergeUtils.merge(getMatching(db, config));
     }
 }
