@@ -185,7 +185,7 @@ public class AuxMapManager {
         auxMapFile.delete();
     }
 
-    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs, boolean delete_existing) throws SQLException {
+    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
         if (delete_existing) {
             deleteAuxMap(attrs);
         }

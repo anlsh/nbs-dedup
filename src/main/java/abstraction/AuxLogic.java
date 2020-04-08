@@ -50,6 +50,9 @@ public class AuxLogic {
      * @return
      */
     private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long uid) {
+        attrs = new HashSet<>(attrs);
+        attrs.add(MatchFieldEnum.UID);
+
         Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
         List<String> tableColumns = new ArrayList<>();
         String queryString = "SELECT ";
