@@ -41,7 +41,5 @@ public class DeduplicationTest {
 
         Set<Set<Long>> res = Deduplication.getMatchingMerged(db, config);
         System.out.println("merged results " + res.toString());
-
     }
-
 }

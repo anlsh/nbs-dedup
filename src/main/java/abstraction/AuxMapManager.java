@@ -192,6 +192,11 @@ public class AuxMapManager {
         if (auxMapExists(attrs)) {
             return loadAuxMapFromFile(attrs);
         } else {
+
+            if (delete_existing && auxMapExists(attrs)) {
+                throw new RuntimeException("Auxmap exists after deletion?");
+            }
+
             AuxMap aux = db.constructAuxMap(attrs);
 
             // Whenever an auxmap is newly created update the manager
@@ -199,7 +204,7 @@ public class AuxMapManager {
             return aux;
         }
     }
-    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs) throws SQLException {
+    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs) {
         return getAuxMap(db, attrs, false);
     }
 
