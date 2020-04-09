@@ -1,15 +1,10 @@
 package algorithm;
 
-import abstraction.Constants;
-import abstraction.DummyDataTest;
-import abstraction.MatchFieldEnum;
+import abstraction.*;
 import org.junit.*;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DummyDeduplicationTest extends DummyDataTest {
     protected static String personSchema;
@@ -53,6 +48,8 @@ public class DummyDeduplicationTest extends DummyDataTest {
     public static void dropTables() throws SQLException {
         dummy_conn.dropTable("Person");
         dummy_conn.dropTable("Person_name");
+        //This isn't super necessary since the db is set up to be temporary and delete itself when the program
+        //is done running. However, in case we add other extensions, we should do this.
     }
 
     @Before
@@ -85,5 +82,30 @@ public class DummyDeduplicationTest extends DummyDataTest {
         expectedResults.put(MatchFieldEnum.SSN, "999-99-9999");
         assert(expectedResults.equals(results));
     }
-
+    @Test
+    public void testDedupSingleField() throws SQLException {
+        Set<MatchFieldEnum> attrs = new HashSet<>();
+        attrs.add(MatchFieldEnum.SSN);
+        ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
+        config.add(attrs);
+        AuxMapManager.deleteAuxMap(attrs); //TODO this is a dangerous test to run! Delete this later.
+        Set<Set<Long> > matchingIDs = Deduplication.getMatchingMerged(al, config);
+        System.out.println("Matching IDs:");
+        for(Set<Long> matchingIDSet : matchingIDs) {
+            System.out.print("\t[");
+            for(Long l : matchingIDSet) {
+                System.out.print(l + ", ");
+            }
+            System.out.println("]");
+        }
+        Set<Set<Long> > expectedMatchingIDs = new HashSet<>();
+        Set<Long> temp = new HashSet<>();
+        temp.add(123l);
+        temp.add(125l);
+        expectedMatchingIDs.add(temp);
+        temp = new HashSet<>();
+        temp.add(124l);
+        temp.add(126l);
+        assert(expectedMatchingIDs.equals(matchingIDs));
+    }
 }
