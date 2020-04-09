@@ -33,6 +33,17 @@ public class AuxMap implements Serializable {
             }
             ret.append("]\n");
         }
+        ret.append("}\nhash_to_id: {\n");
+        for(HashCode hc : hashToIdMap.keySet()) {
+            ret.append("\t");
+            ret.append(hc.toString());
+            ret.append(" : [");
+            for(Long l : hashToIdMap.get(hc)) {
+                ret.append(l);
+                ret.append(", ");
+            }
+            ret.append("]\n");
+        }
         ret.append("}");
         return ret.toString();
     }
