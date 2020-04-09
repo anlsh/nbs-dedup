@@ -17,7 +17,8 @@ public class Constants {
 
     // Paralellization Things
 
-    public static final int NUM_AUXMAP_THREADS = 4;
+//    public static final int NUM_AUXMAP_THREADS = 4;
+    public static final int NUM_AUXMAP_THREADS = 1; //TODO debug to see if AuxMap construction parallelism is bugged
     // TODO I don't think this variable actually affects the time even though it apparently really should
     // See https://stackoverflow.com/questions/17744090/iterating-a-resultset-using-the-jdbc-for-oracle-takes-a-lot-of-time-about-16s
     public static final int fetch_size = 10;

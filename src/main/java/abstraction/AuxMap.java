@@ -80,4 +80,24 @@ public class AuxMap implements Serializable {
             hashToIdMap.put(key, concurrentHashToIdMapElement);
         }
     }
+
+    @Override
+    public int hashCode() {
+        return attrs.hashCode();
+    }
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(o == null || (hashCode() != o.hashCode())) return false;
+        else if(o instanceof AuxMap) {
+            AuxMap other = (AuxMap) o;
+            return attrs.equals(other.attrs) && hashToIdMap.equals(other.hashToIdMap) && idToHashMap.equals(other.idToHashMap);
+        }
+        return false;
+    }
+
+    //For debug to see if its broken
+    public boolean isEmpty() {
+        return attrs.isEmpty() || hashToIdMap.isEmpty() || idToHashMap.isEmpty();
+    }
 }
