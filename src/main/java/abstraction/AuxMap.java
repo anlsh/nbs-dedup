@@ -13,6 +13,30 @@ public class AuxMap implements Serializable {
     ConcurrentMap<Long, Set<HashCode>> idToHashMap;
     ConcurrentMap<HashCode, Set<Long>> hashToIdMap;
 
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append("attrs: [");
+        for(MatchFieldEnum mfe : attrs) {
+            ret.append(mfe);
+            ret.append(", ");
+        }
+        ret.append("]\n");
+        ret.append("id_to_hash: {\n");
+        for(Long l : idToHashMap.keySet()) {
+            ret.append("\t");
+            ret.append(l);
+            ret.append(" : [");
+            for(HashCode hc : idToHashMap.get(l)) {
+                ret.append(hc.toString());
+                ret.append(", ");
+            }
+            ret.append("]\n");
+        }
+        ret.append("}");
+        return ret.toString();
+    }
+
     public AuxMap(Set<MatchFieldEnum> attrs,
                   ConcurrentMap<Long, Set<HashCode>> idToHash, ConcurrentMap<HashCode, Set<Long>> hashToId) {
         this.attrs = attrs;

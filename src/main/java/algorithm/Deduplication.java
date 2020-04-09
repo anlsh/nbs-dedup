@@ -11,12 +11,15 @@ public class Deduplication {
 
     // Gets duplicates given a list of various configurations
     public static List<Set<Set<Long>>> getMatching(AuxLogic db, List<Set<MatchFieldEnum>> config) throws SQLException {
-
+        //TODO fix this, it returns a random subset of what's correct.
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
 
         for(Set<MatchFieldEnum> fieldsToMatchOn : config) {
             AuxMap auxMap = AuxMapManager.getAuxMap(db, fieldsToMatchOn);
+            //TODO remove debug printlns
+            System.out.println("Auxmap in getMatching: ");
+            System.out.println(auxMap);
             Set<Set<Long>> matchesForCurrentConfig = new HashSet<>();
             for(Set<Long> idsWithMatchingHashes : auxMap.getHashToIdMap().values()) {
                 while(idsWithMatchingHashes.size() > 1) {
