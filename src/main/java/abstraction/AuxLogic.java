@@ -148,18 +148,22 @@ public class AuxLogic {
                     executor.execute(
                             () -> {
                                 HashCode hash = HashUtils.hashFields(attr_map);
+                                idToHash.putIfAbsent(uid, ConcurrentSet.newSingletonSet(hash));
                                 Set<HashCode> currentIdToHashes = idToHash.getOrDefault(uid, null);
                                 if (currentIdToHashes != null) {
                                     currentIdToHashes.add(hash);
                                 } else {
-                                    idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
+                                    throw new RuntimeException("putting failed");
+                                    //idToHash.put(uid, ConcurrentSet.newSingletonSet(hash));
                                 }
 
+                                hashToIDs.putIfAbsent(hash, ConcurrentSet.newSingletonSet(uid));
                                 Set<Long> idsWithSameHash = hashToIDs.getOrDefault(hash, null);
                                 if (idsWithSameHash != null) {
                                     idsWithSameHash.add(uid);
                                 } else {
-                                    hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
+                                    throw new RuntimeException("putting failed");
+                                    //hashToIDs.put(hash, ConcurrentSet.newSingletonSet(uid));
                                 }
                             }
                     );
