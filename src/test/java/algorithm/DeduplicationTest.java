@@ -27,7 +27,7 @@ public class DeduplicationTest {
 
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(Sets.newHashSet(
-                MatchFieldEnum.FIRST_NAME,
+                MatchFieldEnum.SSN,
                 MatchFieldEnum.LAST_NAME
         ));
         List<Set<Set<Long>>> res = Deduplication.getMatching(db, config);
@@ -37,7 +37,7 @@ public class DeduplicationTest {
     public void testGetMatchesMerge() throws SQLException {
 
         List<Set<MatchFieldEnum>> config = new ArrayList<>();
-        config.add(Sets.newHashSet(MatchFieldEnum.FIRST_NAME, MatchFieldEnum.LAST_NAME));
+        config.add(Sets.newHashSet(MatchFieldEnum.SSN, MatchFieldEnum.LAST_NAME));
 
         Set<Set<Long>> res = Deduplication.getMatchingMerged(db, config);
         System.out.println("merged results " + res.toString());
