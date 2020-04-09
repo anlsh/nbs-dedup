@@ -165,7 +165,7 @@ public class AuxLogic {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(0, TimeUnit.MILLISECONDS);
+            executor.awaitTermination(Constants.hashing_time_limit_minutes, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted before could add all entries to AuxMap");
         }

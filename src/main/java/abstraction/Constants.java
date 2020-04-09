@@ -24,4 +24,5 @@ public class Constants {
     public static final int fetch_size = 10;
 
     public static final int blocking_q_size = 10;
+    public static final int hashing_time_limit_minutes = 60;
 }
