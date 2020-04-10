@@ -65,6 +65,8 @@ public class DummyDeduplicationTest extends DummyDataTest {
 
         dummy_conn.insertRow("Person_name", personNameColumns, "123, 'Joe', 'Schmoe'"); //TODO add more records to both tables
         dummy_conn.insertRow("Person_name", personNameColumns, "124, 'Jane', 'Schmoe'"); //TODO add more records to both tables
+        dummy_conn.insertRow("Person_name", personNameColumns, "125, 'Jeff', 'Schmoe'");
+        dummy_conn.insertRow("Person_name", personNameColumns, "126, 'JJ', 'S'");
     }
 
     @Before
@@ -98,16 +100,14 @@ public class DummyDeduplicationTest extends DummyDataTest {
         attrs.add(MatchFieldEnum.SSN);
         ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
         config.add(attrs);
-        List<Set<Set<Long> >> matchingIDs = Deduplication.getMatching(al, config);
+        Set<Set<Long> > matchingIDs = Deduplication.getMatchingMerged(al, config);
         System.out.println("Matching IDs:");
-        for(Set<Set<Long> > matchingIDSet : matchingIDs) {
-            for(Set<Long> s : matchingIDSet) {
-                System.out.print("\t[");
-                for (Long l : s) {
-                    System.out.print(l + ", ");
-                }
-                System.out.println("]");
+        for(Set<Long> matchingIDSet : matchingIDs) {
+            System.out.print("\t[");
+            for (Long l : matchingIDSet) {
+                System.out.print(l + ", ");
             }
+            System.out.println("]");
         }
         Set<Set<Long> > expectedMatchingIDs = new HashSet<>();
         Set<Long> temp = new HashSet<>();
@@ -117,7 +117,30 @@ public class DummyDeduplicationTest extends DummyDataTest {
         temp = new HashSet<>();
         temp.add(124l);
         temp.add(126l);
-//        expectedMatchingIDs.add(temp);
-        //assert(expectedMatchingIDs.equals(matchingIDs));
+        expectedMatchingIDs.add(temp);
+        assert(expectedMatchingIDs.equals(matchingIDs));
+    }
+    @Test
+    public void testDedupMultiField() throws SQLException {
+        Set<MatchFieldEnum> attrs = new HashSet<>();
+        attrs.add(MatchFieldEnum.SSN);
+        attrs.add(MatchFieldEnum.LAST_NAME);
+        ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
+        config.add(attrs);
+        Set<Set<Long> > matchingIDs = Deduplication.getMatchingMerged(al, config);
+        System.out.println("Matching IDs:");
+        for(Set<Long> matchingIDSet : matchingIDs) {
+            System.out.print("\t[");
+            for (Long l : matchingIDSet) {
+                System.out.print(l + ", ");
+            }
+            System.out.println("]");
+        }
+        Set<Set<Long> > expectedMatchingIDs = new HashSet<>();
+        Set<Long> temp = new HashSet<>();
+        temp.add(123l);
+        temp.add(125l);
+        expectedMatchingIDs.add(temp);
+        assert(expectedMatchingIDs.equals(matchingIDs));
     }
 }
