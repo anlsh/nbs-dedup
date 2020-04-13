@@ -12,9 +12,6 @@ public class Constants {
     public static final String DB_NAME = "ODS_PRIMARY_DATA01";
     public static final String DB_USERNAME = "SA";
     public static final String DB_PASSWORD = "saYyWbfZT5ni7t";
-    public static final String WEB_SERVER = "localhost";
-    public static final String WEB_PORT = "8080";
-    public static final String GET_CONFIGS_REQUEST = "/config/";
     public static final String PRIMARY_TABLE_NAME = "Person";
 
     // Paralellization Things
