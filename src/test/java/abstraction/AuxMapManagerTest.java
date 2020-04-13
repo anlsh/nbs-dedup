@@ -63,9 +63,9 @@ public class AuxMapManagerTest {
         assert AuxMapManager.auxMapExists(empty);
 
         AuxMap loadedMap = AuxMapManager.loadAuxMapFromFile(empty);
-        assert loadedMap.attrs.equals(empty);
-        assert loadedMap.idToHashMap.size() == 1;
-        assert loadedMap.idToHashMap.get(MAGIC_KEY).isEmpty();
+        assert loadedMap.getAttrs().equals(empty);
+        assert loadedMap.getIdToHashMap().size() == 1;
+        assert loadedMap.getHashToIdMap().get(MAGIC_KEY).isEmpty();
 
         AuxMapManager.deleteAuxMap(empty);
         assert !AuxMapManager.auxMapExists(empty);

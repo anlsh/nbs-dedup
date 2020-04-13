@@ -54,10 +54,10 @@ public class AuxMapManager {
 
     public static void saveAuxMapToFile(AuxMap aux) {
 
-        deleteAuxMap(aux.attrs);
+        deleteAuxMap(aux.getAttrs());
 
         try {
-            File auxMapFile = new File(mfieldSetToFilename(aux.attrs));
+            File auxMapFile = new File(mfieldSetToFilename(aux.getAttrs()));
             auxMapFile.getParentFile().mkdirs();
             if (auxMapFile.getParentFile() != null) {
                 auxMapFile.getParentFile().mkdirs();
@@ -100,9 +100,9 @@ public class AuxMapManager {
 
     public static synchronized void hookManagerAddMap(AuxMap auxMap){
         JSONObject manager = getOrCreateMapManager();
-        String fileName = mfieldSetToFilename(auxMap.attrs);
+        String fileName = mfieldSetToFilename(auxMap.getAttrs());
         JSONArray attrString = new JSONArray();
-        attrString.addAll(auxMap.attrs);
+        attrString.addAll(auxMap.getAttrs());
 
         manager.put(fileName, attrString);
         saveManagerToFile(manager);

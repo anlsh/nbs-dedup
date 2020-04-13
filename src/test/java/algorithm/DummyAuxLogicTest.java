@@ -10,6 +10,12 @@ import java.util.Set;
 
 public class DummyAuxLogicTest extends DummyDeduplicationTest {
 
+    private boolean auxMapIsEmpty(AuxMap aux) {
+        // For debug to see if its broken
+        return aux.getAttrs().isEmpty() || aux.getHashToIdMap().isEmpty() || aux.getIdToHashMap().isEmpty();
+
+    }
+
     @Test
     public void testConstructAuxMapThreading() {
         Set<MatchFieldEnum> attrs = new HashSet<>();
@@ -21,7 +27,7 @@ public class DummyAuxLogicTest extends DummyDeduplicationTest {
         AuxMap mtAuxMap = al.constructAuxMap(attrs, 4);
         System.out.println("MT AUXMAP: " + mtAuxMap);
         assert(stAuxMap.equals(mtAuxMap));
-        assert(!stAuxMap.isEmpty());
+        assert(!auxMapIsEmpty(stAuxMap));
         //TODO figure out why these are empty
     }
 }
