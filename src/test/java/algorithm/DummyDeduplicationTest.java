@@ -21,7 +21,7 @@ public class DummyDeduplicationTest extends DummyDataTest {
         StringBuilder cols = new StringBuilder();
         schema.append(Constants.COL_PERSON_UID);
         cols.append(Constants.COL_PERSON_UID);
-        schema.append(" BIGINT NOT NULL, "); //TODO write a member of MatchField that gives the schema for each field
+        schema.append(" BIGINT NOT NULL, ");
         cols.append(", ");
         schema.append(Constants.COL_SSN);
         cols.append(Constants.COL_SSN);
