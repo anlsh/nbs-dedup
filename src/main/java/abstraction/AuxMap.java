@@ -5,7 +5,6 @@ import utils.ConcurrentSetFactory;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * The fundamental data structure of the deduplication algorithm.
@@ -23,8 +22,8 @@ import java.util.concurrent.ConcurrentMap;
 public class AuxMap implements Serializable {
 
     private Set<MatchFieldEnum> attrs;
-    private ConcurrentMap<Long, Set<HashCode>> idToHashes;
-    private ConcurrentMap<HashCode, Set<Long>> hashToIds;
+    private Map<Long, Set<HashCode>> idToHashes;
+    private Map<HashCode, Set<Long>> hashToIds;
 
     /**
      * Create an AuxMap object for a given set of attributes and maps. As this class is simply a wrapper object, the
@@ -34,7 +33,7 @@ public class AuxMap implements Serializable {
      * @param hashToIds
      */
     public AuxMap(Set<MatchFieldEnum> attrs,
-                  ConcurrentMap<Long, Set<HashCode>> idToHashes, ConcurrentMap<HashCode, Set<Long>> hashToIds) {
+                  Map<Long, Set<HashCode>> idToHashes, Map<HashCode, Set<Long>> hashToIds) {
         this.attrs = attrs;
         this.idToHashes = idToHashes;
         this.hashToIds = hashToIds;

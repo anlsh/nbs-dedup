@@ -22,7 +22,8 @@ public class Constants {
     public static final int fetch_size = 10;
 
     public static final int blocking_q_size = 10;
-    public static final int hashing_time_limit_minutes = 60;
+    public static final int HASHING_TIME_LIMIT_VAL = 60;
+    public static final TimeUnit HASHING_TIME_LIMIT_UNITS = TimeUnit.MINUTES;
 
     public static final int THREAD_TIMEOUT_MILLIS = 2000;
     public static final TimeUnit THREAD_TIMEOUT_UNITS = TimeUnit.MILLISECONDS;
