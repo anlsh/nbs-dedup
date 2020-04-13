@@ -1,4 +1,4 @@
-package abstraction;
+package algorithm;
 
 import java.util.*;
 
