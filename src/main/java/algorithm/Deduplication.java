@@ -21,7 +21,7 @@ public class Deduplication {
             System.out.println("Auxmap in getMatching: ");
             System.out.println(auxMap);
             Set<Set<Long>> matchesForCurrentConfig = new HashSet<>();
-            for(Set<Long> idsWithMatchingHashes : auxMap.getHashToIdMap().values()) {
+            for(Set<Long> idsWithMatchingHashes : auxMap.getHashToIds().values()) {
                 while(idsWithMatchingHashes.size() > 1) {
                     //TODO
                     //Hashes match, check for actual matches within set using fieldsToMatchOn and read db

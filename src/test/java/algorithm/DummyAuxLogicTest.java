@@ -12,7 +12,7 @@ public class DummyAuxLogicTest extends DummyDeduplicationTest {
 
     private boolean auxMapIsEmpty(AuxMap aux) {
         // For debug to see if its broken
-        return aux.getAttrs().isEmpty() || aux.getHashToIdMap().isEmpty() || aux.getIdToHashMap().isEmpty();
+        return aux.getAttrs().isEmpty() || aux.getHashToIds().isEmpty() || aux.getIdToHashes().isEmpty();
     }
 
     @Test

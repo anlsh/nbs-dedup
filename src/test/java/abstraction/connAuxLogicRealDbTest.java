@@ -37,10 +37,10 @@ public class connAuxLogicRealDbTest {
                 1
         );
 
-        assert (aux.getIdToHashMap() != null);
-        assert (aux.getIdToHashMap() != null);
+        assert (aux.getIdToHashes() != null);
+        assert (aux.getIdToHashes() != null);
 
-        assert !aux.getIdToHashMap().isEmpty();
-        assert !aux.getHashToIdMap().isEmpty();
+        assert !aux.getIdToHashes().isEmpty();
+        assert !aux.getHashToIds().isEmpty();
     }
 }
