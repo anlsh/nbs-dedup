@@ -21,7 +21,7 @@ public class AuxMapManagerTest {
 
     @Before
     public void setupDatabaseConnection() throws IOException, SQLException {
-        Connection nbsConn = NBSConnection.getNBSConnection(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
+        Connection nbsConn = NBSConnectionFactory.make(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD);
         db = new AuxLogic(nbsConn);
         FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));

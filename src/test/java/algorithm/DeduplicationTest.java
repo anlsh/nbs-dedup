@@ -2,7 +2,7 @@ package algorithm;
 
 import abstraction.MatchFieldEnum;
 import abstraction.AuxLogic;
-import abstraction.NBSConnection;
+import abstraction.NBSConnectionFactory;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class DeduplicationTest {
 
     @Before
     public void setupDatabaseConnection() throws SQLException, IOException {
-        db = new AuxLogic(NBSConnection.getNBSConnection("localhost", 1433, "ODS_PRIMARY_DATA01",
+        db = new AuxLogic(NBSConnectionFactory.make("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t"));
     }
 

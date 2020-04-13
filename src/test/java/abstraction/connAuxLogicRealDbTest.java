@@ -20,7 +20,7 @@ public class connAuxLogicRealDbTest {
 
     @Before
     public void setupDatabaseConnection() throws SQLException {
-        Connection nbsConn = NBSConnection.getNBSConnection(
+        Connection nbsConn = NBSConnectionFactory.make(
                 Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD
         );
