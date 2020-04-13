@@ -5,7 +5,6 @@ import utils.ResultType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
 
 /**
  * An enum where each value corresponds to a flag which can be matched on: for instance first name, or last name,
@@ -46,9 +45,9 @@ public enum MatchFieldEnum {
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
         @Override public ResultType getFieldValue(ResultSet rs) throws SQLException {
             ResultType ssn = SSN.getFieldValue(rs);
-            if (ssn.unknown) { return new ResultType(null, true); }
+            if (ssn.isUnknown()) { return new ResultType(null, true); }
             else {
-                String ssnStr = ((String) ssn.value);
+                String ssnStr = ((String) ssn.getValue());
                 return new ResultType(ssnStr.substring(ssnStr.length() - 4), false);
             }
         }

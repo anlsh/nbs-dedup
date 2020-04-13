@@ -34,7 +34,7 @@ public class AuxLogic {
         rs.next();
         for (MatchFieldEnum mf : attrs) {
             ResultType result = mf.getFieldValue(rs);
-            ret.put(mf, result.value);
+            ret.put(mf, result.getValue());
         }
         return ret;
     }
@@ -132,15 +132,15 @@ public class AuxLogic {
                 Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
                 boolean include_entry = true;
 
-                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).value;
+                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).getValue();
 
                 for (MatchFieldEnum mfield : attrsAsList) {
                     ResultType result = mfield.getFieldValue(rs);
-                    if (result.unknown) {
+                    if (result.isUnknown()) {
                         include_entry = false;
                         break;
                     } else {
-                        attr_map.put(mfield, result.value);
+                        attr_map.put(mfield, result.getValue());
                     }
                 }
 
