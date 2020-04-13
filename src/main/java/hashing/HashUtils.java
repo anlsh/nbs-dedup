@@ -1,7 +1,6 @@
 package hashing;
 
 import abstraction.MatchFieldEnum;
-import abstraction.MatchFieldUtils;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
 
@@ -85,7 +84,7 @@ public class HashUtils {
         Set<MatchFieldEnum> keySet = record.keySet();
         Hasher hasher = hashFunction.newHasher();
 
-        for (MatchFieldEnum mfield : MatchFieldUtils.getSortedMfields()) {
+        for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
             if (keySet.contains(mfield)) {
                 try {
                     putIntoHasher(hasher,  mfield.getFieldType(), record.get(mfield));

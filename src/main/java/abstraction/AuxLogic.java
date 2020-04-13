@@ -4,7 +4,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
 import utils.BlockingThreadPool;
@@ -29,7 +28,7 @@ public class AuxLogic {
      */
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
         ConcurrentMap<MatchFieldEnum, Object> ret = new ConcurrentHashMap<>();
-        String queryString = getSQLQueryForAllEntries(attrs, id);
+        String queryString = SQLQueryUtils.getSQLQueryForEntries(attrs, id);
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
         for (MatchFieldEnum mf : attrs) {
@@ -37,65 +36,6 @@ public class AuxLogic {
             ret.put(mf, result.getValue());
         }
         return ret;
-    }
-
-    /** Generates an SQL query to retrieve the columns for any given set of match fields and (potentially) any specific
-     * id.
-     *
-     * If uid is null, then returns a ResultSet containing the needed columns for every single entry in the
-     * database. If it is non-null, then the ResultSet only contains the information concerning the given uid
-     * @param attrs The set of MatchFields to deduplicate on
-     * @param uid The specific person ID to retrieve information for, or null if information for all IDs should be
-     *            retrieved
-     * @return
-     */
-    private String getSQLQueryForAllEntries(Set<MatchFieldEnum> attrs, Long uid) {
-        attrs = new HashSet<>(attrs);
-        attrs.add(MatchFieldEnum.UID);
-
-        Map<String, Set<MatchFieldEnum>> tableNameMap = MatchFieldUtils.getTableNameMap(attrs);
-        List<String> tableColumns = new ArrayList<>();
-        String queryString = "SELECT ";
-        for(String tableName : tableNameMap.keySet()) {
-            List<String> currTableColumns = new ArrayList<>();
-            currTableColumns.add(
-                    MatchFieldUtils.getSQLQualifiedColName(tableName, Constants.COL_PERSON_UID)
-                    + " as " + MatchFieldUtils.getAliasedColName(tableName, Constants.COL_PERSON_UID)
-            );
-            for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
-                for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
-                    currTableColumns.add(
-                            MatchFieldUtils.getSQLQualifiedColName(tableName, reqiredColumn)
-                            + " as " + MatchFieldUtils.getAliasedColName(tableName, reqiredColumn)
-                    );
-                }
-            }
-            tableColumns.add(String.join(", ", currTableColumns));
-        }
-        queryString += String.join(", ", tableColumns);
-        queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
-
-        // If only fetching for a single id, add that constraint to the query
-        List<String> where_clauses = new ArrayList<>();
-        if (uid != null) {
-            where_clauses.add(MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
-                    + " = " + uid);
-        }
-        // Align the columns from each table by the person_uid column.
-        if(tableNameMap.keySet().size() > 1) {
-            Iterator<String> iter = tableNameMap.keySet().iterator();
-            while (iter.hasNext()) {
-                where_clauses.add(
-                        MatchFieldUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
-                        + " = "
-                        + MatchFieldUtils.getSQLQualifiedColName(iter.next(), Constants.COL_PERSON_UID));
-            }
-        }
-        if (where_clauses.size() > 0) {
-            queryString += " where " + String.join(" and ", where_clauses);
-        }
-
-        return queryString;
     }
 
     /** Given a set of match fields, traverse the database and create a fresh AuxMap object.
@@ -107,7 +47,7 @@ public class AuxLogic {
 
         // Obtain a ResultSet object through which to access the database
         ResultSet rs;
-        String queryString = getSQLQueryForAllEntries(attrs, null);
+        String queryString = SQLQueryUtils.getSQLQueryForEntries(attrs, null);
         try {
             Statement query = conn.createStatement();
             query.setFetchSize(Constants.fetch_size);

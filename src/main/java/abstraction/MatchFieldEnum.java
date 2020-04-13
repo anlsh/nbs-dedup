@@ -107,7 +107,7 @@ public enum MatchFieldEnum {
                     "depending on multiple fields");
         }
         Object tableObj = rs.getObject(
-                MatchFieldUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+                SQLQueryUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
         );
 
         if (tableObj == null) {
