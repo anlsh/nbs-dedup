@@ -1,7 +1,7 @@
 package abstraction;
 
 import com.google.common.hash.HashCode;
-import utils.ConcurrentSet;
+import utils.ConcurrentSetFactory;
 
 import java.io.*;
 import java.util.*;
@@ -70,12 +70,12 @@ public class AuxMap implements Serializable {
      */
     public void ensureThreadSafe() {
         for (Long key : idToHashMap.keySet()) {
-            Set<HashCode> concurrentIdToHashMapElement = ConcurrentSet.newSet();
+            Set<HashCode> concurrentIdToHashMapElement = ConcurrentSetFactory.newSet();
             concurrentIdToHashMapElement.addAll(idToHashMap.get(key));
             idToHashMap.put(key, concurrentIdToHashMapElement);
         }
         for (HashCode key : hashToIdMap.keySet()) {
-            Set<Long> concurrentHashToIdMapElement = ConcurrentSet.newSet();
+            Set<Long> concurrentHashToIdMapElement = ConcurrentSetFactory.newSet();
             concurrentHashToIdMapElement.addAll(hashToIdMap.get(key));
             hashToIdMap.put(key, concurrentHashToIdMapElement);
         }

@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
 import utils.BlockingThreadPool;
-import utils.ConcurrentSet;
+import utils.ConcurrentSetFactory;
 import utils.ResultType;
 
 public class AuxLogic {
@@ -149,10 +149,10 @@ public class AuxLogic {
                             () -> {
                                 HashCode hash = HashUtils.hashFields(attr_map);
 
-                                idToHash.putIfAbsent(uid, ConcurrentSet.newSet());
+                                idToHash.putIfAbsent(uid, ConcurrentSetFactory.newSet());
                                 idToHash.get(uid).add(hash);
 
-                                hashToIDs.putIfAbsent(hash, ConcurrentSet.newSet());
+                                hashToIDs.putIfAbsent(hash, ConcurrentSetFactory.newSet());
                                 hashToIDs.get(hash).add(uid);
                             }
                     );
