@@ -13,7 +13,6 @@ public class DummyAuxLogicTest extends DummyDeduplicationTest {
     private boolean auxMapIsEmpty(AuxMap aux) {
         // For debug to see if its broken
         return aux.getAttrs().isEmpty() || aux.getHashToIdMap().isEmpty() || aux.getIdToHashMap().isEmpty();
-
     }
 
     @Test
@@ -28,6 +27,5 @@ public class DummyAuxLogicTest extends DummyDeduplicationTest {
         System.out.println("MT AUXMAP: " + mtAuxMap);
         assert(stAuxMap.equals(mtAuxMap));
         assert(!auxMapIsEmpty(stAuxMap));
-        //TODO figure out why these are empty
     }
 }
