@@ -11,8 +11,7 @@ import java.sql.SQLException;
 /**
  * Ensure that AuxMap construction logic works on a real NBS database (such as dummy db which team 9345 was provided)
  * Since we don't know the data in the database necessarily, the tests in this class ensure that none of the auxmap
- * constructions fail. For tests which verify the actual logic of our algorithms, see <></>
- * TODO Update the above line with the "actual" test class, once it exists
+ * constructions fail. For tests which verify the actual logic of our algorithms, see DummyDataTest
  */
 public class connAuxLogicRealDbTest {
 

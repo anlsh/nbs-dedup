@@ -71,10 +71,8 @@ public class AuxMapManager {
 
 
             hookManagerAddMap(aux);
-        } catch (Exception e) {
-            // TODO Exception handling
-            e.printStackTrace();
-            throw new RuntimeException();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -145,10 +143,8 @@ public class AuxMapManager {
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
             return aux;
-        } catch (Exception e) {
-            // TODO Exception handling
-            e.printStackTrace();
-            throw new RuntimeException();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -165,10 +161,8 @@ public class AuxMapManager {
 
             aux.ensureThreadSafe();
             return aux;
-        } catch (Exception e) {
-            // TODO Exception handling
-            e.printStackTrace();
-            throw new RuntimeException();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -255,9 +249,7 @@ public class AuxMapManager {
 //                    }
 //                }
 //            }    catch (SQLException e) {
-//                // TODO Exception Handling
-//                e.printStackTrace();
-//                throw new RuntimeException("Error while trying to scan database entries");
+//                throw new RuntimeException(e);
 //            }
 //
 //            saveAuxMapToFile(map);
@@ -303,9 +295,7 @@ public class AuxMapManager {
 //                    }
 //                }
 //            } catch (SQLException e) {
-//                // TODO Exception Handling
-//                e.printStackTrace();
-//                throw new RuntimeException("Error while trying to scan database entries");
+//                throw new RuntimeException(e);
 //            }
 //            saveAuxMapToFile(map);
 //
