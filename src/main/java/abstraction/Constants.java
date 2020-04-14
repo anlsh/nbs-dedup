@@ -14,6 +14,8 @@ public class Constants {
     public static final String DB_PASSWORD = "saYyWbfZT5ni7t";
     public static final String PRIMARY_TABLE_NAME = "Person";
 
+    public static final String AUX_DATA_ROOT = "/tmp/aux-maps/";
+
     // Paralellization Things
 
     public static final int NUM_AUXMAP_THREADS = 4;

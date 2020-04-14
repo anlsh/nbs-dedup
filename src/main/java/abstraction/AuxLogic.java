@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 
 import com.google.common.hash.HashCode;
 import hashing.HashUtils;
+import utils.AggregateResultType;
 import utils.BlockingThreadPool;
 import utils.ConcurrentSetFactory;
 import utils.ResultType;
@@ -79,25 +80,14 @@ public class AuxLogic {
         // Loop over the items in the ResultSet, hashing them immediately or concurrently
         try {
             while (rs.next()) {
-                Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-                boolean include_entry = true;
-                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).getValue();
 
-                // Determine whether the current record should be included in the AuxMap
-                for (MatchFieldEnum mfield : new ArrayList<>(attrs)) {
-                    ResultType result = mfield.getFieldValue(rs);
-                    if (result.isUnknown()) {
-                        include_entry = false;
-                        break;
-                    } else {
-                        attr_map.put(mfield, result.getValue());
-                    }
-                }
+                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).getValue();
+                AggregateResultType result = new AggregateResultType(attrs, rs);
 
                 // Hash the entry and update the maps accordingly
-                if (include_entry) {
+                if (!result.isUnknown()) {
                     Runnable hashSubmissionJob = () -> {
-                        HashCode hash = HashUtils.hashFields(attr_map);
+                        HashCode hash = HashUtils.hashFields(result.getValues());
 
                         idToHash.putIfAbsent(uid, ConcurrentSetFactory.newSet());
                         idToHash.get(uid).add(hash);

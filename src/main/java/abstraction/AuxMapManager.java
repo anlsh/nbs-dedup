@@ -1,5 +1,6 @@
 package abstraction;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
@@ -13,45 +14,50 @@ import java.util.*;
 
 public class AuxMapManager {
 
-    private static String DATA_ROOT = "/tmp/aux-maps/";
-    private static String AUXMAP_MANAGER = DATA_ROOT + "manager.json";
+    private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + "manager.json";
+    public static String getDataRoot() { return Constants.AUX_DATA_ROOT; }
 
-    public static String getDataRoot() { return DATA_ROOT; }
-    // TODO Make the setter for this do proper validation on directory name
-    public static void setDataRoot(String curr) { DATA_ROOT = curr; }
-
-    public static String mfieldSetToString(final Set<MatchFieldEnum> attrs) {
-        // Maybe reduce duplicate calls to it later
+    /**
+     * Condenses a set of MatchFieldEnum into a number which will be used as the AuxMap's filename
+     * @param attrs     A set of MatchFieldEnum
+     * @return          The filename for attrs
+     */
+    static String mfieldSetToFilename(final Set<MatchFieldEnum> attrs) {
         List<MatchFieldEnum> attrList = new ArrayList<>(attrs);
         Collections.sort(attrList);
-        String attributes_str = "";
+        List<String> attrNames = new ArrayList<>();
         for (MatchFieldEnum mfield : attrList) {
-            attributes_str += mfield.toString() + "_";
+            attrNames.add(mfield.toString());
         }
-        return Integer.toString(attributes_str.hashCode());
+        String attrHash = Integer.toString(Math.abs(String.join("__", attrNames).hashCode()));
+        return Constants.AUX_DATA_ROOT + attrHash + ".auxmap";
     }
 
-    private static JSONObject getOrCreateMapManager(){
+    private static JSONObject getOrCreateMapManager() {
 
         File managerFile = new File(AUXMAP_MANAGER);
-        if (managerFile.exists()){
+        if (managerFile.exists()) {
             return loadManagerFromFile();
         } else {
-            JSONObject manager = new JSONObject();
-            return manager;
+            return new JSONObject();
         }
     }
 
-    public static String mfieldSetToFilename(final Set<MatchFieldEnum> attrs) {
-        return DATA_ROOT + mfieldSetToString(attrs) + ".auxmap";
-    }
-
+    /**
+     * Check whether an auxmap file exists for the given set of MatchFieldEnums
+     *
+     * @param attrs     A set of MatchFieldEnum
+     * @return          Whether the file exists
+     */
     public static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
-
         File auxMapFile = new File(mfieldSetToFilename(attrs));
         return auxMapFile.exists();
     }
 
+    /**
+     * Save an AuxMap object to the filesystem
+     * @param aux   An AuxMap object
+     */
     public static void saveAuxMapToFile(AuxMap aux) {
 
         deleteAuxMap(aux.getAttrs());
@@ -105,22 +111,10 @@ public class AuxMapManager {
         saveManagerToFile(manager);
     }
 
-    public static synchronized void hookManagerDeleteMap(Set<MatchFieldEnum> attrs){
-        JSONObject manager = getOrCreateMapManager();
-        String fileName = mfieldSetToFilename(attrs);
-
-        manager.remove(fileName);
-        saveManagerToFile(manager);
-    }
-
-    public static JSONObject loadManagerFromFile(){
-        try (FileReader reader = new FileReader(AUXMAP_MANAGER))
-        {
+    private static JSONObject loadManagerFromFile(){
+        try (FileReader reader = new FileReader(AUXMAP_MANAGER)) {
             JSONParser jsonParser = new JSONParser();
-            JSONObject manager = (JSONObject) jsonParser.parse(reader);
-
-
-            return manager;
+            return (JSONObject) jsonParser.parse(reader);
         } catch (IOException | ParseException e) {
             throw new RuntimeException(e);
         }
@@ -158,11 +152,15 @@ public class AuxMapManager {
     }
 
     public static void deleteAuxMap(final Set<MatchFieldEnum> attrs) {
+
         File auxMapfile = new File(mfieldSetToFilename(attrs));
         auxMapfile.delete();
 
-        hookManagerDeleteMap(attrs);
+        JSONObject manager = getOrCreateMapManager();
+        String fileName = mfieldSetToFilename(attrs);
 
+        manager.remove(fileName);
+        saveManagerToFile(manager);
     }
 
     public static void deleteAuxMapManager(){
