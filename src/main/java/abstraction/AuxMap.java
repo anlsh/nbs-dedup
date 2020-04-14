@@ -49,6 +49,19 @@ public class AuxMap implements Serializable {
         hashToIds.get(hash).add(uid);
     }
 
+    public void removeByID(long uid) {
+        if (idToHashes.containsKey(uid)) {
+            Set<HashCode> hashes = idToHashes.get(uid);
+            idToHashes.remove(uid);
+
+            for (HashCode hash : hashes) {
+                Set<Long> idsWithThisHash = hashToIds.get(hash);
+                idsWithThisHash.remove(uid);
+                if (idsWithThisHash.isEmpty()) { hashToIds.remove(hash); }
+            }
+        }
+    }
+
     public Set<MatchFieldEnum> getAttrs() { return attrs; }
     public Map<HashCode, Set<Long>> getHashToIds() {
         return hashToIds;

@@ -4,10 +4,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
+import com.google.common.hash.HashCode;
+import hashing.HashUtils;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
+import utils.AggregateResultType;
+import utils.ConcurrentSetFactory;
 
 import java.io.*;
 import java.util.*;
@@ -133,8 +137,6 @@ public class AuxMapManager {
         }
     }
 
-
-
     public static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
 
         try {
@@ -192,102 +194,45 @@ public class AuxMapManager {
     }
 
 
-//    public static void hookAddRecord(ResultSet rs) {
-//
-//
-//        JSONObject auxmapManager = getOrCreateMapManager();
-//        for (Object filename : auxmapManager.keySet()){
-//            AuxMap map = loadAuxMapFromFilename((String)filename);
-//            Set<MatchFieldEnum> attrs = map.attrs;
-//            try {
-//                while (rs.next()) {
-//                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-//
-//
-//                    boolean include_entry = true;
-//
-//
-//                    for (MatchFieldEnum mfield : attrs) {
-//                        try {
-//                            Object mfield_val = mfield.getFieldValues(rs);
-//                            attr_map.put(mfield, mfield.getFieldValues(rs));
-//                        } catch (UnknownValueException e) {
-//                            include_entry = false;
-//                            break;
-//                        }
-//                    }
-//
-//                    if (include_entry) {
-//                        long record_id;
-//                        try {
-//                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
-//                        } catch (UnknownValueException e) {
-//                            e.printStackTrace();
-//                            throw new RuntimeException("Obtained record orphaned from any patient uid");
-//                        }
-//                        HashCode hash = HashUtils.hashFields(attr_map);
-//                        if (map.getIdToHashMap().containsKey(record_id)) {
-//                            map.getIdToHashMap().get(record_id).add(hash);
-//                        }
-//                        Set<Long> idsWithSameHash = map.getHashToIdMap().getOrDefault(hash, null);
-//                        if (idsWithSameHash != null) {
-//                            idsWithSameHash.add(record_id);
-//                        } else {
-//                            map.getHashToIdMap().put(hash, Sets.newHashSet(record_id));
-//                        }
-//                    }
-//                }
-//            }    catch (SQLException e) {
-//                throw new RuntimeException(e);
-//            }
-//
-//            saveAuxMapToFile(map);
-//        }
-//    }
-//
-//    public static void hookRemoveRecord(ResultSet rs) {
-//
-//        JSONObject auxmapManager = getOrCreateMapManager();
-//        for (Object filename : auxmapManager.keySet()) {
-//            AuxMap map = loadAuxMapFromFilename((String) filename);
-//            Set<MatchFieldEnum> attrs = map.attrs;
-//
-//            try {
-//                while (rs.next()) {
-//                    Map<MatchFieldEnum, Object> attr_map = new HashMap<>();
-//
-//                    boolean include_entry = true;
-//                    for (MatchFieldEnum mfield : attrs) {
-//                        try {
-//                            Object mfield_val = mfield.getFieldValues(rs);
-//                            attr_map.put(mfield, mfield_val);
-//                        } catch (UnknownValueException e) {
-//                            include_entry = false;
-//                            break;
-//                        }
-//                    }
-//
-//                    if (!include_entry) {
-//                        continue;
-//                    } else {
-//                        long record_id;
-//                        try {
-//                            record_id = (long) MatchFieldEnum.UID.getFieldValues(rs).toArray()[0];
-//                        } catch (UnknownValueException e) {
-//                            e.printStackTrace();
-//                            throw new RuntimeException("Obtained record orphaned from any patient uid");
-//                        }
-//                        HashCode hash = HashUtils.hashFields(attr_map);
-//
-//                        map.getIdToHashMap().remove(record_id);
-//                        map.getHashToIdMap().remove(hash);
-//                    }
-//                }
-//            } catch (SQLException e) {
-//                throw new RuntimeException(e);
-//            }
-//            saveAuxMapToFile(map);
-//
-//        }
-//    }
+    /**
+     * Updates all auxmaps to reflect the addition of a record to the database
+     * @param rs    A ResultSet of length 1 and which includes the necessary columns (not all necessarily populated with
+     *              "known" values) for every value of MatchField.
+     */
+    public static void hookAddRecord(ResultSet rs) {
+
+        JSONObject auxmapManager = getOrCreateMapManager();
+
+        try {
+            while (rs.next()) {
+                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).getValue();
+
+                for (Object filename : auxmapManager.keySet()) {
+                    AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+                    AggregateResultType attrResults = new AggregateResultType(auxmap.getAttrs(), rs);
+
+                    if (!attrResults.isUnknown()) {
+                        auxmap.addPair(uid, HashUtils.hashFields(attrResults.getValues()));
+                    }
+                    saveAuxMapToFile(auxmap);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Removes the record associated with uid from all aux maps.
+     *
+     * @param uid   The uid of record to be removed
+     */
+    public static void hookRemoveRecord(long uid) {
+        JSONObject auxmapManager = getOrCreateMapManager();
+        for (Object filename : auxmapManager.keySet()) {
+            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+            auxmap.removeByID(uid);
+            saveAuxMapToFile(auxmap);
+        }
+    }
 }
