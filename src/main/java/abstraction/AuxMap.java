@@ -30,7 +30,7 @@ public class AuxMap implements Serializable {
      * actual construction of the idToHashes and hashToIds maps is handled elsewhere
      * @param attrs         Set of MatchFields which this AuxMap describes
      * @param idToHashes    Map from patient_uid to hashes
-     * @param hashToIds     Map from hashe to patient_uids
+     * @param hashToIds     Map from hash to patient_uids
      */
     public AuxMap(Set<MatchFieldEnum> attrs,
                   Map<Long, Set<HashCode>> idToHashes, Map<HashCode, Set<Long>> hashToIds) {
