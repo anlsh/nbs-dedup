@@ -12,7 +12,7 @@ import utils.ResultType;
 
 public class AuxLogic {
 
-    Connection conn;
+    private Connection conn;
 
     public AuxLogic(Connection conn) {
         this.conn = conn;
@@ -21,13 +21,13 @@ public class AuxLogic {
     /** When a hash collision (potential match) is detected, we need to retrieve the original information to ensure
      * that the match is in fact genuine. This function calculates the MatchField values for the given person_uid and
      * returns them in a dictionary
-     * @param id
-     * @param attrs
-     * @return
+     * @param id        Specific value for patient_uid
+     * @param attrs     Set of MatchFieldEnums to retrieve values for
+     * @return          A map from MatchFieldEnum to values
      * @throws SQLException
      */
     public Map<MatchFieldEnum, Object> getFieldsById(long id, final Set<MatchFieldEnum> attrs) throws SQLException {
-        ConcurrentMap<MatchFieldEnum, Object> ret = new ConcurrentHashMap<>();
+        Map<MatchFieldEnum, Object> ret = new HashMap<>();
         String queryString = SQLQueryUtils.getSQLQueryForEntries(attrs, id);
         ResultSet rs = conn.createStatement().executeQuery(queryString);
         rs.next();
