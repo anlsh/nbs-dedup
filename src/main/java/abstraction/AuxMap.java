@@ -73,9 +73,9 @@ public class AuxMap implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
-        if(o == null || (hashCode() != o.hashCode())) return false;
-        else if(o instanceof AuxMap) {
+        if (this == o) return true;
+        if (o == null || (hashCode() != o.hashCode())) return false;
+        else if (o instanceof AuxMap) {
             AuxMap other = (AuxMap) o;
             return attrs.equals(other.attrs) && hashToIds.equals(other.hashToIds) && idToHashes.equals(other.idToHashes);
         }

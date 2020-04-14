@@ -90,9 +90,8 @@ public class AuxMapManager {
             managerFileWriter.write(manager.toJSONString());
             managerFileWriter.close();
 
-        } catch (Exception e){
-            e.printStackTrace();
-            throw new RuntimeException();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -122,16 +121,8 @@ public class AuxMapManager {
 
 
             return manager;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        } catch (ParseException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
+        } catch (IOException | ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 

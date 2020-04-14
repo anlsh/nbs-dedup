@@ -59,7 +59,6 @@ public class AuxLogic {
             rs = query.executeQuery(queryString);
             rs.setFetchSize(Constants.fetch_size);
         } catch (SQLException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
 
@@ -115,15 +114,14 @@ public class AuxLogic {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error while trying to scan database entries");
+            throw new RuntimeException(e);
         }
 
         executor.shutdown();
         try {
             executor.awaitTermination(Constants.HASHING_TIME_LIMIT_VAL, Constants.HASHING_TIME_LIMIT_UNITS);
         } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted before could add all entries to AuxMap");
+            throw new RuntimeException(e);
         }
         return new AuxMap(attrs, idToHash, hashToIDs);
     }
