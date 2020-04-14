@@ -29,7 +29,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
         personSchema = schema.toString();
         personColumns = cols.toString();
         dummy_conn.createTempTable("Person", personSchema);
-        //TODO add other tables like the one referenced in MatchFieldEnum.OTHER_TABLE_NAME
         schema = new StringBuilder();
         cols = new StringBuilder();
         schema.append(Constants.COL_PERSON_UID);
@@ -64,7 +63,7 @@ public class DummyDeduplicationTest extends DummyDataTest {
         dummy_conn.insertRow("Person", personColumns, "126, '999-99-9990'");
 
         dummy_conn.insertRow("Person_name", personNameColumns, "123, 'Joe', 'Schmoe'"); //TODO add more records to both tables
-        dummy_conn.insertRow("Person_name", personNameColumns, "124, 'Jane', 'Schmoe'"); //TODO add more records to both tables
+        dummy_conn.insertRow("Person_name", personNameColumns, "124, 'Jane', 'Schmoe'");
         dummy_conn.insertRow("Person_name", personNameColumns, "125, 'Jeff', 'Schmoe'");
         dummy_conn.insertRow("Person_name", personNameColumns, "126, 'JJ', 'S'");
     }
