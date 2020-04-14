@@ -8,7 +8,6 @@ import com.google.common.hash.HashCode;
 import hashing.HashUtils;
 import utils.AggregateResultType;
 import utils.BlockingThreadPool;
-import utils.ConcurrentSetFactory;
 import utils.ResultType;
 
 public class AuxLogic {
@@ -73,6 +72,8 @@ public class AuxLogic {
             idToHash = new ConcurrentHashMap<>();
             hashToIDs = new ConcurrentHashMap<>();
         }
+        AuxMap aux = new AuxMap(attrs, idToHash, hashToIDs);
+
         // Is unused when num_threads == 1, but must be initialized anyways
         ExecutorService executor = new BlockingThreadPool(num_threads, Constants.blocking_q_size);
 
@@ -87,13 +88,7 @@ public class AuxLogic {
                 // Hash the entry and update the maps accordingly
                 if (!result.isUnknown()) {
                     Runnable hashSubmissionJob = () -> {
-                        HashCode hash = HashUtils.hashFields(result.getValues());
-
-                        idToHash.putIfAbsent(uid, ConcurrentSetFactory.newSet());
-                        idToHash.get(uid).add(hash);
-
-                        hashToIDs.putIfAbsent(hash, ConcurrentSetFactory.newSet());
-                        hashToIDs.get(hash).add(uid);
+                        aux.addPair(uid, HashUtils.hashFields(result.getValues()));
                     };
 
                     if (num_threads == 1) {

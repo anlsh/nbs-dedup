@@ -41,6 +41,14 @@ public class AuxMap implements Serializable {
         ensureThreadSafe();
     }
 
+    public void addPair(long uid, HashCode hash) {
+        idToHashes.putIfAbsent(uid, ConcurrentSetFactory.newSet());
+        idToHashes.get(uid).add(hash);
+
+        hashToIds.putIfAbsent(hash, ConcurrentSetFactory.newSet());
+        hashToIds.get(hash).add(uid);
+    }
+
     public Set<MatchFieldEnum> getAttrs() { return attrs; }
     public Map<HashCode, Set<Long>> getHashToIds() {
         return hashToIds;
