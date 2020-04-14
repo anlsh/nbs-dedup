@@ -29,14 +29,17 @@ public class AuxMapManagerTest {
 
     @Test
     public void testAuxMapFilenameConstruction() {
-        // TODO This test is dumb, fix it
-//        String auxFileName = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
-//        System.out.println(auxFileName);
-//        assert auxFileName.equals(AuxMapManager.getDataRoot() + "-1921453883.auxmap");
+        String auxFnameFirst = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME));
+        String auxFnameLast = AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.LAST_NAME));
+
+        // Make sure the construction is deterministic
+        assert auxFnameFirst.equals(AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME)));
+        // And injective
+        assert !auxFnameFirst.equals(auxFnameLast);
     }
 
     @Test
-    public void testGetAuxMap() throws SQLException {
+    public void testGetAuxMap() {
         Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
