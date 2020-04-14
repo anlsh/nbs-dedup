@@ -116,7 +116,6 @@ public enum MatchFieldEnum {
         else if (this.getFieldType().isInstance(tableObj)) {
             return new ResultType(tableObj, false);
         } else {
-            System.err.println("Bad type: " + tableObj.getClass());
             throw new BadTableObjectException(tableObj, this);
         }
     };
