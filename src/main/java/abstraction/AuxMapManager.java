@@ -198,11 +198,7 @@ public class AuxMapManager {
     }
 
 
-    /**
-     * Updates all auxmaps to reflect the addition of a record to the database
-     * @param rs    A ResultSet of length 1 and which includes the necessary columns (not all necessarily populated with
-     *              "known" values) for every value of MatchField.
-     */
+    /*
     public static synchronized void hookAddRecord(ResultSet rs) {
 
         JSONObject auxmapManager = getOrCreateMapManager();
@@ -223,6 +219,43 @@ public class AuxMapManager {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static synchronized void hookAddRecord(String columns, String values) {
+        JSONObject auxmapManager = getOrCreateMapManager();
+        String[] columnArr = columns.split(",");
+        String[] valueArr = values.split(",");
+        assert(columnArr.length == valueArr.length);
+        for(int i = 0; i < columnArr.length; i++) {
+            columnArr[i] = columnArr[i].trim();
+            valueArr[i] = valueArr[i].trim();
+        }
+        long uid = (long) MatchFieldEnum.UID.getFieldValue(columnArr, valueArr).getValue();
+        for (Object filename : auxmapManager.keySet()) {
+            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+            AggregateResultType attrResults = new AggregateResultType(auxmap.getAttrs(), columnArr, valueArr);
+
+            if (!attrResults.isUnknown()) {
+                auxmap.addPair(uid, HashUtils.hashFields(attrResults.getValues()));
+            }
+            saveAuxMapToFile(auxmap);
+        }
+    }
+     */
+
+    /**
+     * Updates all auxmaps to reflect the addition of a record to the database
+     * @param al    the database
+     * @param uid   the uid added
+     * @throws SQLException
+     */
+    public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
+        JSONObject auxmapManager = getOrCreateMapManager();
+        for(Object filename : auxmapManager.keySet()) {
+            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+            auxmap.addPair(uid, HashUtils.hashFields(al.getFieldsById(uid, auxmap.getAttrs()))); //Runs one get per auxmap
+            saveAuxMapToFile(auxmap);
         }
     }
 

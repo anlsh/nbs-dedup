@@ -46,6 +46,19 @@ public class AggregateResultType {
         values = vmap;
     }
 
+    //Make sure that column names are of the form TABLE_NAME__COLUMN_NAME
+    public AggregateResultType(Set<MatchFieldEnum> attrs, String[] columnArr, String[] valueArr) {
+        Map<MatchFieldEnum, Object> vmap = new HashMap<>();
+        isUnknown = true;
+        for(MatchFieldEnum mfield : new ArrayList<>(attrs)) {
+            ResultType result = mfield.getFieldValue(columnArr, valueArr);
+            if(result.isUnknown()) return;
+            else vmap.put(mfield, result.getValue());
+        }
+        isUnknown = false;
+        values = vmap;
+    }
+
     public Map<MatchFieldEnum, Object> getValues() { return values; }
     public boolean isUnknown() { return isUnknown; }
 }

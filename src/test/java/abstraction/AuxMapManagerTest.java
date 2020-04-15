@@ -66,4 +66,18 @@ public class AuxMapManagerTest extends DummyDeduplicationTest {
         AuxMapManager.hookManagerDeleteMap(empty);
         assert !AuxMapManager.auxMapExists(empty);
     }
+
+    @Test
+    public void testAuxMapManagerGetAuxMap() throws SQLException {
+        Set<MatchFieldEnum> attrs = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
+        AuxMap auxMap = AuxMapManager.getAuxMap(al, attrs);
+        System.out.println(auxMap);
+        dummy_conn.insertRow("Person_name", personNameColumns, "555, 'Zalgo', 'Tron'");
+        AuxMap auxMap2 = AuxMapManager.getAuxMap(al, attrs);
+        assert(auxMap.equals(auxMap2));
+        AuxMapManager.hookAddRecord(al, 555);
+        AuxMap auxMap3 = AuxMapManager.getAuxMap(al, attrs);
+        System.out.println(auxMap3);
+        assert(!auxMap.equals(auxMap3));
+    }
 }
