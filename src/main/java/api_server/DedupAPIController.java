@@ -1,7 +1,6 @@
 package api_server;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Stream;
 
 import abstraction.AuxMapManager;
 import abstraction.MatchFieldEnum;
@@ -71,7 +70,7 @@ public class DedupAPIController {
         JsonObject payload = gson.fromJson(data, JsonObject.class);
 
         Set<MatchFieldEnum> subconfig = subconfig_boolmap_to_mfieldset(payload);
-        AuxMapManager.deleteAuxMap(subconfig);
+        AuxMapManager.hookManagerDeleteMap(subconfig);
 
         return true;
     }

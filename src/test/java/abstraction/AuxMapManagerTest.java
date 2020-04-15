@@ -1,9 +1,11 @@
 package abstraction;
 
+import algorithm.DummyDeduplicationTest;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,17 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class AuxMapManagerTest {
-
-    private AuxLogic db;
-
-    @Before
-    public void setupDatabaseConnection() throws IOException, SQLException {
-        Connection nbsConn = NBSConnectionFactory.make(Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
-                Constants.DB_USERNAME, Constants.DB_PASSWORD);
-        db = new AuxLogic(nbsConn);
-        FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));
-    }
+public class AuxMapManagerTest extends DummyDeduplicationTest {
 
     @Test
     public void testAuxMapFilenameConstruction() {
@@ -35,7 +27,7 @@ public class AuxMapManagerTest {
         // Make sure the construction is deterministic
         assert auxFnameFirst.equals(AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME)));
         // And injective
-        assert !auxFnameFirst.equals(auxFnameLast);
+        assert !auxFnameFirst.equals(auxFnameLast); //TODO there is actually a small chance of collision here!
     }
 
     @Test
@@ -43,7 +35,9 @@ public class AuxMapManagerTest {
         Set<MatchFieldEnum> mfields = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
 
         assert !AuxMapManager.auxMapExists(mfields);
-        AuxMapManager.getAuxMap(db, mfields, false);
+        AuxMapManager.getAuxMap(al, mfields, false);
+        assert AuxMapManager.auxMapExists(mfields);
+        AuxMapManager.getAuxMap(al, mfields, true);
         assert AuxMapManager.auxMapExists(mfields);
     }
 
@@ -69,7 +63,7 @@ public class AuxMapManagerTest {
         assert loadedMap.getIdToHashes().size() == 1;
         assert loadedMap.getHashToIds().isEmpty();
 
-        AuxMapManager.deleteAuxMap(empty);
+        AuxMapManager.hookManagerDeleteMap(empty);
         assert !AuxMapManager.auxMapExists(empty);
     }
 }

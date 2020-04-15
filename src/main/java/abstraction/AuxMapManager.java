@@ -15,6 +15,7 @@ import java.io.*;
 import java.util.*;
 
 public class AuxMapManager {
+    //TODO make a static lock for AuxMapManager instead of making everyting synchronized
 
     private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + "manager.json";
     public static String getDataRoot() { return Constants.AUX_DATA_ROOT; }
@@ -31,6 +32,10 @@ public class AuxMapManager {
         for (MatchFieldEnum mfield : attrList) {
             attrNames.add(mfield.toString());
         }
+        //TODO this might conflict because its a hashcode. Change to either use full names,
+        //or the enum index separated by underscores or something. The first way is more robust
+        //and human readable but could make really long file names. The second way could get broken
+        //when a new field is added in the enum definition.
         String attrHash = Integer.toString(Math.abs(String.join("__", attrNames).hashCode()));
         return Constants.AUX_DATA_ROOT + attrHash + ".auxmap";
     }
@@ -62,11 +67,12 @@ public class AuxMapManager {
      */
     public static void saveAuxMapToFile(AuxMap aux) {
 
-        deleteAuxMap(aux.getAttrs());
+        hookManagerDeleteMap(aux.getAttrs()); //TODO this isn't the safe way to do this
+        //We should be creating it under a temp name, then deleting the old one
+        //and changing the new one's name to the old one.
 
         try {
             File auxMapFile = new File(mfieldSetToFilename(aux.getAttrs()));
-            auxMapFile.getParentFile().mkdirs();
             if (auxMapFile.getParentFile() != null) {
                 auxMapFile.getParentFile().mkdirs();
             }
@@ -85,16 +91,15 @@ public class AuxMapManager {
     }
 
     public synchronized static void saveManagerToFile(JSONObject manager){
-        deleteAuxMapManager();
+        deleteAuxMapManager(); //TODO see comment from saveAuxMapToFile
 
         try {
             File managerFile = new File(AUXMAP_MANAGER);
-            managerFile.getParentFile().mkdirs();
-            FileWriter managerFileWriter = new FileWriter(managerFile);
             if (managerFile.getParentFile() != null){
                 managerFile.getParentFile().mkdirs();
             }
-
+            FileWriter managerFileWriter = new FileWriter(managerFile);
+            //No lock for this one because it's synchronized
             managerFileWriter.write(manager.toJSONString());
             managerFileWriter.close();
 
@@ -107,7 +112,7 @@ public class AuxMapManager {
         JSONObject manager = getOrCreateMapManager();
         String fileName = mfieldSetToFilename(auxMap.getAttrs());
         JSONArray attrString = new JSONArray();
-        attrString.addAll(auxMap.getAttrs());
+        attrString.addAll(auxMap.getAttrs()); //TODO sort this?
 
         manager.put(fileName, attrString);
         saveManagerToFile(manager);
@@ -125,7 +130,7 @@ public class AuxMapManager {
     public static AuxMap loadAuxMapFromFilename(final String filename){
         try {
             FileInputStream fin = new FileInputStream(filename);
-            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
+            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true); //TODO why are there arguments here but not for the other auxmap lock?
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
@@ -136,22 +141,23 @@ public class AuxMapManager {
     }
 
     public static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
-
-        try {
-            FileInputStream fin = new FileInputStream(mfieldSetToFilename(attrs));
-            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
-            ObjectInputStream ois = new ObjectInputStream(fin);
-            AuxMap aux = (AuxMap) ois.readObject();
-            ois.close();
-
-            aux.ensureThreadSafe();
-            return aux;
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        return loadAuxMapFromFilename(mfieldSetToFilename(attrs));
+//        try {
+//            FileInputStream fin = new FileInputStream(mfieldSetToFilename(attrs));
+//            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
+//            ObjectInputStream ois = new ObjectInputStream(fin);
+//            AuxMap aux = (AuxMap) ois.readObject();
+//            ois.close();
+//
+//            aux.ensureThreadSafe();
+//            return aux;
+//        } catch (IOException | ClassNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
-    public static void deleteAuxMap(final Set<MatchFieldEnum> attrs) {
+
+    public static synchronized void hookManagerDeleteMap(final Set<MatchFieldEnum> attrs) {
 
         File auxMapfile = new File(mfieldSetToFilename(attrs));
         auxMapfile.delete();
@@ -163,14 +169,14 @@ public class AuxMapManager {
         saveManagerToFile(manager);
     }
 
-    public static void deleteAuxMapManager(){
+    private static synchronized void deleteAuxMapManager(){
         File auxMapFile = new File(AUXMAP_MANAGER);
         auxMapFile.delete();
     }
 
     public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
         if (delete_existing) {
-            deleteAuxMap(attrs);
+            hookManagerDeleteMap(attrs);
         }
         if (auxMapExists(attrs)) {
             return loadAuxMapFromFile(attrs);
@@ -197,7 +203,7 @@ public class AuxMapManager {
      * @param rs    A ResultSet of length 1 and which includes the necessary columns (not all necessarily populated with
      *              "known" values) for every value of MatchField.
      */
-    public static void hookAddRecord(ResultSet rs) {
+    public static synchronized void hookAddRecord(ResultSet rs) {
 
         JSONObject auxmapManager = getOrCreateMapManager();
 
@@ -225,7 +231,7 @@ public class AuxMapManager {
      *
      * @param uid   The uid of record to be removed
      */
-    public static void hookRemoveRecord(long uid) {
+    public static synchronized void hookRemoveRecord(long uid) {
         JSONObject auxmapManager = getOrCreateMapManager();
         for (Object filename : auxmapManager.keySet()) {
             AuxMap auxmap = loadAuxMapFromFilename((String) filename);
