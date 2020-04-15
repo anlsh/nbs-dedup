@@ -1,15 +1,10 @@
 package abstraction;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
 import hashing.HashUtils;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
-import utils.AggregateResultType;
+import com.google.gson.*;
 
 import java.io.*;
 import java.util.*;
@@ -40,13 +35,13 @@ public class AuxMapManager {
         return Constants.AUX_DATA_ROOT + attrHash + ".auxmap";
     }
 
-    private static JSONObject getOrCreateMapManager() {
+    private static JsonObject getOrCreateMapManager() {
 
         File managerFile = new File(AUXMAP_MANAGER);
         if (managerFile.exists()) {
             return loadManagerFromFile();
         } else {
-            return new JSONObject();
+            return new JsonObject();
         }
     }
 
@@ -90,7 +85,7 @@ public class AuxMapManager {
         }
     }
 
-    public synchronized static void saveManagerToFile(JSONObject manager){
+    public synchronized static void saveManagerToFile(JsonObject manager){
         deleteAuxMapManager(); //TODO see comment from saveAuxMapToFile
 
         try {
@@ -100,7 +95,7 @@ public class AuxMapManager {
             }
             FileWriter managerFileWriter = new FileWriter(managerFile);
             //No lock for this one because it's synchronized
-            managerFileWriter.write(manager.toJSONString());
+            (new Gson()).toJson(manager, managerFileWriter);
             managerFileWriter.close();
 
         } catch (IOException e) {
@@ -109,20 +104,23 @@ public class AuxMapManager {
     }
 
     public static synchronized void hookManagerAddMap(AuxMap auxMap){
-        JSONObject manager = getOrCreateMapManager();
+        JsonObject manager = getOrCreateMapManager();
         String fileName = mfieldSetToFilename(auxMap.getAttrs());
-        JSONArray attrString = new JSONArray();
-        attrString.addAll(auxMap.getAttrs()); //TODO sort this?
 
-        manager.put(fileName, attrString);
+        JsonArray attrNames = new JsonArray();
+
+        for (MatchFieldEnum mfield : auxMap.getAttrs()) {
+            attrNames.add(mfield.toString());
+        }
+
+        manager.add(fileName, attrNames);
         saveManagerToFile(manager);
     }
 
-    private static JSONObject loadManagerFromFile(){
+    private static JsonObject loadManagerFromFile(){
         try (FileReader reader = new FileReader(AUXMAP_MANAGER)) {
-            JSONParser jsonParser = new JSONParser();
-            return (JSONObject) jsonParser.parse(reader);
-        } catch (IOException | ParseException e) {
+            return (new Gson()).fromJson(reader, JsonObject.class);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -162,7 +160,7 @@ public class AuxMapManager {
         File auxMapfile = new File(mfieldSetToFilename(attrs));
         auxMapfile.delete();
 
-        JSONObject manager = getOrCreateMapManager();
+        JsonObject manager = getOrCreateMapManager();
         String fileName = mfieldSetToFilename(attrs);
 
         manager.remove(fileName);
@@ -251,7 +249,7 @@ public class AuxMapManager {
      * @throws SQLException
      */
     public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
-        JSONObject auxmapManager = getOrCreateMapManager();
+        JsonObject auxmapManager = getOrCreateMapManager();
         for(Object filename : auxmapManager.keySet()) {
             AuxMap auxmap = loadAuxMapFromFilename((String) filename);
             auxmap.addPair(uid, HashUtils.hashFields(al.getFieldsById(uid, auxmap.getAttrs()))); //Runs one get per auxmap
@@ -265,7 +263,7 @@ public class AuxMapManager {
      * @param uid   The uid of record to be removed
      */
     public static synchronized void hookRemoveRecord(long uid) {
-        JSONObject auxmapManager = getOrCreateMapManager();
+        JsonObject auxmapManager = getOrCreateMapManager();
         for (Object filename : auxmapManager.keySet()) {
             AuxMap auxmap = loadAuxMapFromFilename((String) filename);
             auxmap.removeByID(uid);
