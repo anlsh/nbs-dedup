@@ -1,8 +1,10 @@
 package abstraction;
 
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
+import com.google.common.primitives.UnsignedLongs;
 import hashing.HashUtils;
 import com.google.gson.*;
 
@@ -10,29 +12,35 @@ import java.io.*;
 import java.util.*;
 
 public class AuxMapManager {
-    //TODO make a static lock for AuxMapManager instead of making everyting synchronized
 
     private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + "manager.json";
     public static String getDataRoot() { return Constants.AUX_DATA_ROOT; }
 
     /**
-     * Condenses a set of MatchFieldEnum into a number which will be used as the AuxMap's filename
+     * Condenses a set of MatchFieldEnum into a the filename for the corresponding AuxMap
+     *
+     * TODO Since the underlying mechanism is a hash, it is theoretically possible that names could conflict.
+     * The chances of this happening are very low, about one in a hundred thousand for any "reasonable" number of
+     * AuxMaps. In all likelihood, the server would run out of space for AuxMaps before encountering a collision.
+     *
+     * Regardless, if absolute safety is preferred then this function could always simply return something like
+     * attrs.toString() instead (at the cost of long file names for the AuxMaps, of course).
+     *
      * @param attrs     A set of MatchFieldEnum
      * @return          The filename for attrs
      */
     static String mfieldSetToFilename(final Set<MatchFieldEnum> attrs) {
+
         List<MatchFieldEnum> attrList = new ArrayList<>(attrs);
         Collections.sort(attrList);
         List<String> attrNames = new ArrayList<>();
         for (MatchFieldEnum mfield : attrList) {
             attrNames.add(mfield.toString());
         }
-        //TODO this might conflict because its a hashcode. Change to either use full names,
-        //or the enum index separated by underscores or something. The first way is more robust
-        //and human readable but could make really long file names. The second way could get broken
-        //when a new field is added in the enum definition.
-        String attrHash = Integer.toString(Math.abs(String.join("__", attrNames).hashCode()));
-        return Constants.AUX_DATA_ROOT + attrHash + ".auxmap";
+        String attrHash = UnsignedLongs.toString(
+                Integer.toUnsignedLong(String.join("+", attrNames).hashCode())
+        );
+        return attrHash + ".auxmap";
     }
 
     private static JsonObject getOrCreateMapManager() {
@@ -52,7 +60,7 @@ public class AuxMapManager {
      * @return          Whether the file exists
      */
     public static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
-        File auxMapFile = new File(mfieldSetToFilename(attrs));
+        File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
         return auxMapFile.exists();
     }
 
@@ -67,7 +75,7 @@ public class AuxMapManager {
         //and changing the new one's name to the old one.
 
         try {
-            File auxMapFile = new File(mfieldSetToFilename(aux.getAttrs()));
+            File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(aux.getAttrs()));
             if (auxMapFile.getParentFile() != null) {
                 auxMapFile.getParentFile().mkdirs();
             }
@@ -139,29 +147,17 @@ public class AuxMapManager {
     }
 
     public static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
-        return loadAuxMapFromFilename(mfieldSetToFilename(attrs));
-//        try {
-//            FileInputStream fin = new FileInputStream(mfieldSetToFilename(attrs));
-//            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
-//            ObjectInputStream ois = new ObjectInputStream(fin);
-//            AuxMap aux = (AuxMap) ois.readObject();
-//            ois.close();
-//
-//            aux.ensureThreadSafe();
-//            return aux;
-//        } catch (IOException | ClassNotFoundException e) {
-//            throw new RuntimeException(e);
-//        }
+        return loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
     }
 
 
     public static synchronized void hookManagerDeleteMap(final Set<MatchFieldEnum> attrs) {
 
-        File auxMapfile = new File(mfieldSetToFilename(attrs));
+        File auxMapfile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
         auxMapfile.delete();
 
         JsonObject manager = getOrCreateMapManager();
-        String fileName = mfieldSetToFilename(attrs);
+        String fileName = Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs);
 
         manager.remove(fileName);
         saveManagerToFile(manager);
@@ -195,53 +191,6 @@ public class AuxMapManager {
         return getAuxMap(db, attrs, false);
     }
 
-
-    /*
-    public static synchronized void hookAddRecord(ResultSet rs) {
-
-        JSONObject auxmapManager = getOrCreateMapManager();
-
-        try {
-            while (rs.next()) {
-                long uid = (long) MatchFieldEnum.UID.getFieldValue(rs).getValue();
-
-                for (Object filename : auxmapManager.keySet()) {
-                    AuxMap auxmap = loadAuxMapFromFilename((String) filename);
-                    AggregateResultType attrResults = new AggregateResultType(auxmap.getAttrs(), rs);
-
-                    if (!attrResults.isUnknown()) {
-                        auxmap.addPair(uid, HashUtils.hashFields(attrResults.getValues()));
-                    }
-                    saveAuxMapToFile(auxmap);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static synchronized void hookAddRecord(String columns, String values) {
-        JSONObject auxmapManager = getOrCreateMapManager();
-        String[] columnArr = columns.split(",");
-        String[] valueArr = values.split(",");
-        assert(columnArr.length == valueArr.length);
-        for(int i = 0; i < columnArr.length; i++) {
-            columnArr[i] = columnArr[i].trim();
-            valueArr[i] = valueArr[i].trim();
-        }
-        long uid = (long) MatchFieldEnum.UID.getFieldValue(columnArr, valueArr).getValue();
-        for (Object filename : auxmapManager.keySet()) {
-            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
-            AggregateResultType attrResults = new AggregateResultType(auxmap.getAttrs(), columnArr, valueArr);
-
-            if (!attrResults.isUnknown()) {
-                auxmap.addPair(uid, HashUtils.hashFields(attrResults.getValues()));
-            }
-            saveAuxMapToFile(auxmap);
-        }
-    }
-     */
-
     /**
      * Updates all auxmaps to reflect the addition of a record to the database
      * @param al    the database
@@ -251,7 +200,7 @@ public class AuxMapManager {
     public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
         JsonObject auxmapManager = getOrCreateMapManager();
         for(Object filename : auxmapManager.keySet()) {
-            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+            AuxMap auxmap = loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + filename);
             auxmap.addPair(uid, HashUtils.hashFields(al.getFieldsById(uid, auxmap.getAttrs()))); //Runs one get per auxmap
             saveAuxMapToFile(auxmap);
         }
@@ -265,7 +214,7 @@ public class AuxMapManager {
     public static synchronized void hookRemoveRecord(long uid) {
         JsonObject auxmapManager = getOrCreateMapManager();
         for (Object filename : auxmapManager.keySet()) {
-            AuxMap auxmap = loadAuxMapFromFilename((String) filename);
+            AuxMap auxmap = loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + filename);
             auxmap.removeByID(uid);
             saveAuxMapToFile(auxmap);
         }
