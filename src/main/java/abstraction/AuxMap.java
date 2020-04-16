@@ -26,7 +26,7 @@ public class AuxMap implements Serializable {
     private Map<HashCode, Set<Long>> hashToIds;
 
     /**
-     * Create an AuxMap object for a given set of attributes and maps. As this class is simply a wrapper object, the
+     * Create an AuxMap object for a given set of attributes and maps. As this class is mostly a wrapper object, the
      * actual construction of the idToHashes and hashToIds maps is handled elsewhere
      * @param attrs         Set of MatchFields which this AuxMap describes
      * @param idToHashes    Map from patient_uid to hashes
@@ -37,10 +37,14 @@ public class AuxMap implements Serializable {
         this.attrs = attrs;
         this.idToHashes = idToHashes;
         this.hashToIds = hashToIds;
-
-        ensureThreadSafe();
     }
 
+    /**
+     * Updates the AuxMap object with information that record corresponding to "uid" hashes to "hash"
+     *
+     * @param uid       A value for person_uid
+     * @param hash      A hash code to be associated with uid
+     */
     public void addPair(long uid, HashCode hash) {
         idToHashes.putIfAbsent(uid, ConcurrentSetFactory.newSet());
         idToHashes.get(uid).add(hash);
@@ -49,6 +53,11 @@ public class AuxMap implements Serializable {
         hashToIds.get(hash).add(uid);
     }
 
+    /**
+     * Removes the hashes associated with uid from the AuxMap
+     *
+     * @param uid       A value for person_uid
+     */
     public void removeByID(long uid) {
         if (idToHashes.containsKey(uid)) {
             Set<HashCode> hashes = idToHashes.get(uid);
@@ -63,29 +72,8 @@ public class AuxMap implements Serializable {
     }
 
     public Set<MatchFieldEnum> getAttrs() { return attrs; }
-    public Map<HashCode, Set<Long>> getHashToIds() {
-        return hashToIds;
-    }
-    public Map<Long, Set<HashCode>> getIdToHashes() {
-        return idToHashes;
-    }
-
-    /**
-     * Because Java jas no built-in concurrent set type, we enforce thread-safety of sets by manually creating
-     * concurrent copies.
-     */
-    public void ensureThreadSafe() {
-        for (Long key : idToHashes.keySet()) {
-            Set<HashCode> concurrentIdToHashMapElement = ConcurrentSetFactory.newSet();
-            concurrentIdToHashMapElement.addAll(idToHashes.get(key));
-            idToHashes.put(key, concurrentIdToHashMapElement);
-        }
-        for (HashCode key : hashToIds.keySet()) {
-            Set<Long> concurrentHashToIdMapElement = ConcurrentSetFactory.newSet();
-            concurrentHashToIdMapElement.addAll(hashToIds.get(key));
-            hashToIds.put(key, concurrentHashToIdMapElement);
-        }
-    }
+    public Map<HashCode, Set<Long>> getHashToIds() { return hashToIds; }
+    public Map<Long, Set<HashCode>> getIdToHashes() { return idToHashes; }
 
     @Override
     public int hashCode() {

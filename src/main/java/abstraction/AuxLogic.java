@@ -47,8 +47,7 @@ public class AuxLogic {
      */
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs, int num_threads) {
 
-        // When num_threads == 1, we can avoid some overhead by not using thread-safe objects. This unfortunately
-        // complicates the code somewhat, but the increase in performance is probably worth it.
+        // When num_threads == 1, we avoid some overhead by not using concurrent objects.
 
         // Obtain a ResultSet object through which to access the database
         ResultSet rs;

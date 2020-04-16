@@ -15,6 +15,9 @@ public class DummyAuxLogicTest extends DummyDeduplicationTest {
         return aux.getAttrs().isEmpty() || aux.getHashToIds().isEmpty() || aux.getIdToHashes().isEmpty();
     }
 
+    /**
+     * This test ensures that parallellization does not affect the contents of an Aux Map
+     */
     @Test
     public void testConstructAuxMapThreading() {
         Set<MatchFieldEnum> attrs = new HashSet<>();
