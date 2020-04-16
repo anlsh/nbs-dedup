@@ -46,18 +46,11 @@ public class DedupAPIController {
     }
 
     @PostMapping("create_subconfig")
-    public Boolean create_subconfig(@RequestParam(value = "data") String data) throws SQLException {
-
-        // Working with arbitrary data kinda sucks, or maybe I'm just dumb.
-        // See https://www.quora.com/Can-I-fetch-a-JSON-object-in-my-spring-controller-without-using-a-model-object
-        // and https://www.baeldung.com/gson-string-to-jsonobject
-        // for the resources I ended up using
+    public Boolean create_subconfig(@RequestParam(value = "data") String data) {
 
         Gson gson = new Gson();
         JsonObject payload = gson.fromJson(data, JsonObject.class);
-
         Set<MatchFieldEnum> subconfig = subconfig_boolmap_to_mfieldset(payload);
-
         AuxMapManager.getAuxMap(RestServiceApplication.database, subconfig);
 
         return true;
