@@ -22,7 +22,7 @@ public class DummyDbAuxConstructorTest extends DummyDeduplicationTest {
     public void testConstructAuxMapThreading() {
         Set<MatchFieldEnum> attrs = new HashSet<>();
         attrs.add(MatchFieldEnum.SSN);
-        ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
+        ArrayList<Set<MatchFieldEnum>> config = new ArrayList<>();
         config.add(attrs);
         AuxMap stAuxMap = al.constructAuxMap(attrs, 1);
         AuxMap mtAuxMap = al.constructAuxMap(attrs, 4);

@@ -17,7 +17,7 @@ public class DeduplicationTest {
     private DbAuxConstructor db;
 
     @Before
-    public void setupDatabaseConnection() throws SQLException, IOException {
+    public void setupDatabaseConnection() throws SQLException {
         db = new DbAuxConstructor(NBSConnectionFactory.make("localhost", 1433, "ODS_PRIMARY_DATA01",
                 "SA", "saYyWbfZT5ni7t"));
     }
