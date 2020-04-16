@@ -58,7 +58,8 @@ public enum MatchFieldEnum {
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
      *  for others: at the moment the only field which it doesn't make sense to deduplicate on is UID
-     * @return
+     *
+     * @return  A boolean
      */
     public boolean isDeduplicableField() {
         return true;
@@ -66,20 +67,25 @@ public enum MatchFieldEnum {
 
     /** Return null if the attribute in question is "top-level," (eg SSN), or the parent MatchFieldEnum if not
      *  (eg last four digits of an SSN
-     * @return
+     *
+     * @return  A MatchFieldEnum or null
      */
     public MatchFieldEnum getParent() {
         return null;
     };
 
     /** Returns the name to be displayed for this MatchFieldEnum in the user-interface
-     * @return
+     *
+     * @return  A string to be displayed in the UI
      */
     public abstract String getHumanReadableName();
 
     /** Returns the name of the table on which this attribute depends. Each attribute can only depend on a single table
      * at the moment, as we see no reason to augment this functionality.
-     * @return
+     *
+     * TODO Should allow depending on multiple tables.
+     *
+     * @return  The dependent table name
      */
     public abstract String getTableName();
 

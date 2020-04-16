@@ -75,6 +75,8 @@ public class AuxMap implements Serializable {
     public Map<HashCode, Set<Long>> getHashToIds() { return hashToIds; }
     public Map<Long, Set<HashCode>> getIdToHashes() { return idToHashes; }
 
+    // Override various java functions for ease of testing and debugging
+
     @Override
     public int hashCode() {
         return attrs.hashCode();

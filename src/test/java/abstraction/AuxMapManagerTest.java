@@ -3,14 +3,8 @@ package abstraction;
 import algorithm.DummyDeduplicationTest;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
@@ -64,7 +58,7 @@ public class AuxMapManagerTest extends DummyDeduplicationTest {
         assert loadedMap.getIdToHashes().size() == 1;
         assert loadedMap.getHashToIds().isEmpty();
 
-        AuxMapManager.hookManagerDeleteMap(empty);
+        AuxMapManager.removeFromAuxManager(empty);
         assert !AuxMapManager.auxMapExists(empty);
     }
 

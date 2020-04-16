@@ -63,7 +63,7 @@ public class DedupAPIController {
         JsonObject payload = gson.fromJson(data, JsonObject.class);
 
         Set<MatchFieldEnum> subconfig = subconfig_boolmap_to_mfieldset(payload);
-        AuxMapManager.hookManagerDeleteMap(subconfig);
+        AuxMapManager.removeFromAuxManager(subconfig);
 
         return true;
     }
