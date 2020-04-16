@@ -21,6 +21,9 @@ import java.util.*;
  *
  * This class contains many functions which are public for testing purposes, but shouldn't need to be used by an API
  * user. These functions are marked with the VisibleForTesting tag.
+ *
+ * It would actually be appropriate (and probably simpler) to implement this via a database. However our team was unsure
+ * of how to do this, and so has left this task undone.
  */
 public class AuxMapManager {
 
@@ -61,7 +64,6 @@ public class AuxMapManager {
             return aux;
         }
     }
-
 
     /**
      * Get a populated AuxMap for the given database and set of attributes, loading it from disk if it exists there or
