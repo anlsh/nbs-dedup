@@ -72,6 +72,7 @@ public class AuxMapManagerTest extends DummyDeduplicationTest {
         Set<MatchFieldEnum> attrs = Sets.newHashSet(MatchFieldEnum.FIRST_NAME);
         AuxMap auxMap = AuxMapManager.getAuxMap(al, attrs);
         System.out.println(auxMap);
+        dummy_conn.insertRow("Person", personColumns, "555, '800-98-8230'");
         dummy_conn.insertRow("Person_name", personNameColumns, "555, 'Zalgo', 'Tron'");
         AuxMap auxMap2 = AuxMapManager.getAuxMap(al, attrs);
         assert(auxMap.equals(auxMap2));
