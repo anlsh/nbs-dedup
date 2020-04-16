@@ -14,13 +14,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin
 public class DedupAPIController {
 
-    static Set<MatchFieldEnum> subconfig_boolmap_to_mfieldset(JsonObject payload) {
+    static Set<MatchFieldEnum> nameArrayToMatchFieldSet(JsonArray payload) {
         Set<MatchFieldEnum> subconfig = new HashSet<>();
 
-        for (MatchFieldEnum mfield : MatchFieldEnum.values()) {
-            if (payload.has(mfield.name()) && payload.get(mfield.name()).getAsBoolean()) {
-                subconfig.add(mfield);
-            }
+        for (JsonElement el : payload) {
+            subconfig.add(MatchFieldEnum.valueOf(el.getAsString()));
         }
 
         return subconfig;
@@ -49,8 +47,8 @@ public class DedupAPIController {
     public Boolean create_subconfig(@RequestParam(value = "data") String data) {
 
         Gson gson = new Gson();
-        JsonObject payload = gson.fromJson(data, JsonObject.class);
-        Set<MatchFieldEnum> subconfig = subconfig_boolmap_to_mfieldset(payload);
+        JsonArray payload = gson.fromJson(data, JsonArray.class);
+        Set<MatchFieldEnum> subconfig = nameArrayToMatchFieldSet(payload);
         AuxMapManager.getAuxMap(RestServiceApplication.database, subconfig);
 
         return true;
@@ -60,31 +58,27 @@ public class DedupAPIController {
     public Boolean delete_subconfig(@RequestParam(value = "data") String data) {
 
         Gson gson = new Gson();
-        JsonObject payload = gson.fromJson(data, JsonObject.class);
+        JsonArray payload = gson.fromJson(data, JsonArray.class);
 
-        Set<MatchFieldEnum> subconfig = subconfig_boolmap_to_mfieldset(payload);
+        Set<MatchFieldEnum> subconfig = nameArrayToMatchFieldSet(payload);
         AuxMapManager.removeFromAuxManager(subconfig);
 
         return true;
     }
 
-    @PostMapping("deduplicate")
-    public String deduplicate(@RequestParam(value = "data") String data) throws SQLException {
-        // Apparently the square brackets aren't allowed in posts?
-        // https://stackoverflow.com/questions/11944410/passing-array-in-get-for-a-rest-call
+    @GetMapping("deduplicate")
+    public String deduplicate(@RequestParam("data") String data) throws SQLException {
 
-        // I asked a question @ https://stackoverflow.com/questions/60479864/spring-boot-does-not-accept-list-params-enclosed-in-brackets
-
-        Gson gson = new Gson();
-        JsonObject[] payload_ls = gson.fromJson("["+data+"]", JsonObject[].class);
+        JsonArray payload_ls = (new Gson()).fromJson(data, JsonArray.class);
 
         List<Set<MatchFieldEnum>> config_ls = new ArrayList<>();
 
-        for (JsonObject payload_l : payload_ls) {
-            config_ls.add(subconfig_boolmap_to_mfieldset(payload_l.getAsJsonObject()));
+        for (JsonElement el : payload_ls) {
+            config_ls.add(nameArrayToMatchFieldSet(el.getAsJsonArray()));
         }
 
         Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(RestServiceApplication.database, config_ls);
+
         return (new Gson()).toJson(duplicates);
     }
 }
