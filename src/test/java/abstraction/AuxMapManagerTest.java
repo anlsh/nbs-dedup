@@ -58,7 +58,7 @@ public class AuxMapManagerTest extends DummyDeduplicationTest {
         AuxMapManager.saveAuxMapToFile(emptyAux);
         assert AuxMapManager.auxMapExists(empty);
 
-        AuxMap loadedMap = AuxMapManager.loadAuxMapFromFile(empty);
+        AuxMap loadedMap = AuxMapManager.loadAuxMapFromAttrs(empty);
         assert loadedMap.getAttrs().equals(empty);
         assert loadedMap.getIdToHashes().size() == 1;
         assert loadedMap.getHashToIds().isEmpty();

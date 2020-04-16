@@ -3,10 +3,10 @@ package abstraction;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.primitives.UnsignedLongs;
 import hashing.HashUtils;
 import com.google.gson.*;
-import utils.ConcurrentSetFactory;
 
 import java.io.*;
 import java.util.*;
@@ -34,7 +34,8 @@ public class AuxMapManager {
      * @param attrs     A set of MatchFieldEnum
      * @return          The filename for attrs
      */
-    static String mfieldSetToFilename(final Set<MatchFieldEnum> attrs) {
+    @VisibleForTesting
+    public static String mfieldSetToFilename(final Set<MatchFieldEnum> attrs) {
 
         List<MatchFieldEnum> attrList = new ArrayList<>(attrs);
         Collections.sort(attrList);
@@ -67,7 +68,7 @@ public class AuxMapManager {
      * "orphan" .auxmap files which are not recorded in manager.json and removing entries from manager.json which
      * describe .auxmap files which no longer exist
      */
-    public void cleanup() {
+    public static synchronized void cleanup() {
         JsonObject manager = loadManagerFromFile();
 
         // Ensure that all AuxMaps described by the manager still exist
@@ -96,7 +97,8 @@ public class AuxMapManager {
      * @param attrs     A set of MatchFieldEnum
      * @return          Whether the file exists
      */
-    static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
+    @VisibleForTesting
+    public static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
         File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
         return auxMapFile.exists();
     }
@@ -105,7 +107,8 @@ public class AuxMapManager {
      * Save an AuxMap object to the filesystem
      * @param aux   An AuxMap object
      */
-    static synchronized void saveAuxMapToFile(AuxMap aux) {
+    @VisibleForTesting
+    public static synchronized void saveAuxMapToFile(AuxMap aux) {
 
         hookManagerDeleteMap(aux.getAttrs()); //TODO this isn't the safe way to do this
         //We should be creating it under a temp name, then deleting the old one
@@ -129,8 +132,11 @@ public class AuxMapManager {
         }
     }
 
-    private synchronized static void saveManagerToFile(JsonObject manager){
-        deleteAuxMapManager(); //TODO see comment from saveAuxMapToFile
+    private synchronized static void saveManagerToFile(JsonObject manager) {
+
+        // TODO see comment from saveAuxMapToFile
+        File auxMapFile = new File(AUXMAP_MANAGER);
+        auxMapFile.delete();
 
         try {
             File managerFile = new File(AUXMAP_MANAGER);
@@ -169,9 +175,9 @@ public class AuxMapManager {
         }
     }
 
-    private static AuxMap loadAuxMapFromFilename(final String filename){
+    private static AuxMap loadAuxMapFromFile(final String filename){
         try {
-            FileInputStream fin = new FileInputStream(filename);
+            FileInputStream fin = new FileInputStream(Constants.AUX_DATA_ROOT + filename);
             FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true); //TODO why are there arguments here but not for the other auxmap lock?
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
@@ -182,35 +188,40 @@ public class AuxMapManager {
         }
     }
 
-    static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
-        return loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
+    @VisibleForTesting
+    public static AuxMap loadAuxMapFromAttrs(Set<MatchFieldEnum> attrs) {
+        return loadAuxMapFromFile(mfieldSetToFilename(attrs));
     }
 
+    /**
+     * Updates the manager to reflect the removal of a specific AuxMap
+     *
+     * @param attrs     Attrs for the AuxMap to delete
+     */
     public static synchronized void hookManagerDeleteMap(final Set<MatchFieldEnum> attrs) {
 
-        File auxMapfile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
-        auxMapfile.delete();
-
         JsonObject manager = getOrCreateMapManager();
-        String fileName = Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs);
-
-        manager.remove(fileName);
+        manager.remove(mfieldSetToFilename(attrs));
         saveManagerToFile(manager);
+        cleanup();
     }
 
-    private static synchronized void deleteAuxMapManager(){
-        File auxMapFile = new File(AUXMAP_MANAGER);
-        auxMapFile.delete();
-    }
-
+    /**
+     * Same as the two-parameter version of getAuxMap, but with the option to overwrite the existing AuxMap
+     * (if it exists) with a freshly-created one.
+     *
+     * @param db                    An active database connection
+     * @param attrs                 The set of MatchFields for which to create an AuxMap
+     * @param delete_existing       Whether to overwrite the existing AuxMap, if it exists, with a freshly-created one
+     * @return                      A populated AuxMap for "attrs"
+     */
     public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
         if (delete_existing) {
             hookManagerDeleteMap(attrs);
         }
         if (auxMapExists(attrs)) {
-            return loadAuxMapFromFile(attrs);
+            return loadAuxMapFromAttrs(attrs);
         } else {
-
             if (delete_existing && auxMapExists(attrs)) {
                 throw new RuntimeException("Auxmap exists after deletion?");
             }
@@ -223,12 +234,30 @@ public class AuxMapManager {
         }
     }
 
+
+    /**
+     * Get a populated AuxMap for the given database and set of attributes, loading it from disk if it exists there or
+     * creating and saving it if it does not.
+     *
+     * @param db        An active database connection
+     * @param attrs     The set of MatchFields for which to create an AuxMap
+     * @return          A populated AuxMap for "attrs"
+     */
     public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs) {
         return getAuxMap(db, attrs, false);
     }
 
     /**
      * Updates all auxmaps to reflect the addition of a record to the database
+     *
+     * TODO The current model of loading/saving the files every single time a record is added or deleted is slow
+     * and inefficient. A better solution would be to insert addition/deletion operations into a job queue, and "flush"
+     * (ie actually perform the operations) in said queue every time getAuxMap is called or the server is shut down.
+     * This would ensure that the AuxMap files are loaded into memory only as often as needed.
+     *
+     * Unfortunately our team ran out of time to implement this specific feature, but it should be done before this
+     * API is used in production.
+     *
      * @param al                the database
      * @param uid               the uid added
      * @throws SQLException     When retrieving attribute values from the database fails
@@ -236,7 +265,7 @@ public class AuxMapManager {
     public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
         JsonObject auxmapManager = getOrCreateMapManager();
         for(Object filename : auxmapManager.keySet()) {
-            AuxMap auxmap = loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + filename);
+            AuxMap auxmap = loadAuxMapFromFile((String) filename);
             auxmap.addPair(uid, HashUtils.hashFields(al.getFieldsById(uid, auxmap.getAttrs()))); //Runs one get per auxmap
             saveAuxMapToFile(auxmap);
         }
@@ -245,12 +274,14 @@ public class AuxMapManager {
     /**
      * Removes the record associated with uid from all aux maps.
      *
+     * TODO See to-do item in "hookAddRecord"
+     *
      * @param uid   The uid of record to be removed
      */
     public static synchronized void hookRemoveRecord(long uid) {
         JsonObject auxmapManager = getOrCreateMapManager();
         for (Object filename : auxmapManager.keySet()) {
-            AuxMap auxmap = loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + filename);
+            AuxMap auxmap = loadAuxMapFromFile((String) filename);
             auxmap.removeByID(uid);
             saveAuxMapToFile(auxmap);
         }
