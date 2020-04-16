@@ -96,7 +96,7 @@ public class AuxMapManager {
      * @param attrs     A set of MatchFieldEnum
      * @return          Whether the file exists
      */
-    public static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
+    static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
         File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
         return auxMapFile.exists();
     }
@@ -105,7 +105,7 @@ public class AuxMapManager {
      * Save an AuxMap object to the filesystem
      * @param aux   An AuxMap object
      */
-    public static synchronized void saveAuxMapToFile(AuxMap aux) {
+    static synchronized void saveAuxMapToFile(AuxMap aux) {
 
         hookManagerDeleteMap(aux.getAttrs()); //TODO this isn't the safe way to do this
         //We should be creating it under a temp name, then deleting the old one
@@ -129,7 +129,7 @@ public class AuxMapManager {
         }
     }
 
-    public synchronized static void saveManagerToFile(JsonObject manager){
+    private synchronized static void saveManagerToFile(JsonObject manager){
         deleteAuxMapManager(); //TODO see comment from saveAuxMapToFile
 
         try {
@@ -186,7 +186,6 @@ public class AuxMapManager {
         return loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
     }
 
-
     public static synchronized void hookManagerDeleteMap(final Set<MatchFieldEnum> attrs) {
 
         File auxMapfile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
@@ -230,9 +229,9 @@ public class AuxMapManager {
 
     /**
      * Updates all auxmaps to reflect the addition of a record to the database
-     * @param al    the database
-     * @param uid   the uid added
-     * @throws SQLException
+     * @param al                the database
+     * @param uid               the uid added
+     * @throws SQLException     When retrieving attribute values from the database fails
      */
     public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
         JsonObject auxmapManager = getOrCreateMapManager();
