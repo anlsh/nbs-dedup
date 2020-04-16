@@ -2,7 +2,7 @@ package abstraction;
 
 import Constants.InternalConstants;
 
-import exceptions.BadTableObjectException;
+import utils.BadTableObjectException;
 import utils.ResultType;
 
 import java.sql.ResultSet;

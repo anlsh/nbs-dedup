@@ -1,4 +1,4 @@
-package api_server;
+package server;
 
 import Constants.LocalDatabase;
 
