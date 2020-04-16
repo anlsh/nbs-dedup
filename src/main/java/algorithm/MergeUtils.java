@@ -32,10 +32,9 @@ public class MergeUtils {
             }
         }
 
-        //TODO speed this up with the following:
-        //I think this could be modelled as a Connected Components graph problem and solved in linear time, but w/e
-
-        //Merge all groupings until there is no more merging to do.
+        // TODO This could be modelled as a Connected Components graph problem and solved in linear time but w/e
+        // -- Christian
+        // Merge all groupings until there is no more merging to do.
         boolean changed;
         do {
             changed = false;
