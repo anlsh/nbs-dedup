@@ -19,32 +19,31 @@ public enum MatchFieldEnum {
     UID {
         @Override public boolean isDeduplicableField() { return false; }
         @Override public String getHumanReadableName() { return "Unique ID"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_PERSON_UID}; }
         @Override public Class getFieldType() { return Long.class; }
         @Override public String getTableName() {return "Person"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_PERSON_UID}; }
     },
     FIRST_NAME {
         @Override public String getHumanReadableName() { return "First Name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_FIRST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person_name"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_FIRST_NAME}; }
     },
     LAST_NAME {
         @Override public String getHumanReadableName() { return "Last Name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_LAST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person_name"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_LAST_NAME}; }
     },
     SSN {
         @Override public String getHumanReadableName() { return "Social Security Number"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_SSN}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_SSN}; }
     },
     SSN_LAST_FOUR {
         @Override public MatchFieldEnum getParent() { return SSN; }
         @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
-        @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
         @Override public ResultType getFieldValue(ResultSet rs) throws SQLException {
             ResultType ssn = SSN.getFieldValue(rs);
             if (ssn.isUnknown()) { return new ResultType(null, true); }
@@ -55,6 +54,7 @@ public enum MatchFieldEnum {
         }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person"; }
+        @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
     };
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
@@ -91,7 +91,8 @@ public enum MatchFieldEnum {
     public abstract String getTableName();
 
     /** Returns a list of columns which the attribute depends on *within its table*. So for example the FIRST_NM
-     * flag which depends on the "first_nm" column from the "Person_name" table would return ["first_nm"]
+     * flag which depends on the "first_nm" column from the "Person_name" table would return ["first_nm"], and its
+     * getTableName() should return "Person_name"
      * @return
      */
     public abstract String[] getRequiredColumnsArray();
