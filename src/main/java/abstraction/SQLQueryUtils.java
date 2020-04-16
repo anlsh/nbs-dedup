@@ -1,5 +1,7 @@
 package abstraction;
 
+import Constants.InternalConstants;
+
 import com.google.common.collect.Lists;
 
 import java.util.*;
@@ -90,8 +92,8 @@ public class SQLQueryUtils {
         for(String tableName : tableNameMap.keySet()) {
             List<String> currTableColumns = new ArrayList<>();
             currTableColumns.add(
-                    SQLQueryUtils.getSQLQualifiedColName(tableName, Constants.COL_PERSON_UID)
-                            + " as " + SQLQueryUtils.getAliasedColName(tableName, Constants.COL_PERSON_UID)
+                    SQLQueryUtils.getSQLQualifiedColName(tableName, InternalConstants.COL_PERSON_UID)
+                            + " as " + SQLQueryUtils.getAliasedColName(tableName, InternalConstants.COL_PERSON_UID)
             );
             for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
                 for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
@@ -109,18 +111,23 @@ public class SQLQueryUtils {
         // If only fetching for a single id, add that constraint to the query
         List<String> where_clauses = new ArrayList<>();
         if (uid != null) {
-            where_clauses.add(SQLQueryUtils.getSQLQualifiedColName(Constants.PRIMARY_TABLE_NAME, Constants.COL_PERSON_UID)
+            where_clauses.add(
+                    SQLQueryUtils.getSQLQualifiedColName(
+                            InternalConstants.PRIMARY_TABLE_NAME, InternalConstants.COL_PERSON_UID
+                    )
                     + " = " + uid);
         }
         // Align the columns from each table by the person_uid column.
         if (tableNameMap.keySet().size() > 1) {
             Iterator<String> iter = tableNameMap.keySet().iterator();
             String primaryTableUID = SQLQueryUtils.getSQLQualifiedColName(
-                    Constants.PRIMARY_TABLE_NAME,
-                    Constants.COL_PERSON_UID
+                    InternalConstants.PRIMARY_TABLE_NAME,
+                    InternalConstants.COL_PERSON_UID
             );
             while (iter.hasNext()) {
-                String currTableUID  = SQLQueryUtils.getSQLQualifiedColName(iter.next(), Constants.COL_PERSON_UID);
+                String currTableUID  = SQLQueryUtils.getSQLQualifiedColName(
+                        iter.next(), InternalConstants.COL_PERSON_UID
+                );
                 if (!primaryTableUID.equals(currTableUID)) {
                     where_clauses.add(primaryTableUID + " = " + currTableUID);
                 }

@@ -1,5 +1,7 @@
 package algorithm;
 
+import Constants.InternalConstants;
+
 import abstraction.*;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
@@ -19,28 +21,28 @@ public class DummyDeduplicationTest extends DummyDataTest {
     public static void createTables() throws SQLException {
         StringBuilder schema = new StringBuilder();
         StringBuilder cols = new StringBuilder();
-        schema.append(Constants.COL_PERSON_UID);
-        cols.append(Constants.COL_PERSON_UID);
+        schema.append(InternalConstants.COL_PERSON_UID);
+        cols.append(InternalConstants.COL_PERSON_UID);
         schema.append(" BIGINT NOT NULL, ");
         cols.append(", ");
-        schema.append(Constants.COL_SSN);
-        cols.append(Constants.COL_SSN);
+        schema.append(InternalConstants.COL_SSN);
+        cols.append(InternalConstants.COL_SSN);
         schema.append(" VARCHAR(12) ");
         personSchema = schema.toString();
         personColumns = cols.toString();
         dummy_conn.createTempTable("Person", personSchema);
         schema = new StringBuilder();
         cols = new StringBuilder();
-        schema.append(Constants.COL_PERSON_UID);
-        cols.append(Constants.COL_PERSON_UID);
+        schema.append(InternalConstants.COL_PERSON_UID);
+        cols.append(InternalConstants.COL_PERSON_UID);
         schema.append(" BIGINT NOT NULL, ");
         cols.append(", ");
-        schema.append(Constants.COL_FIRST_NAME);
-        cols.append(Constants.COL_FIRST_NAME);
+        schema.append(InternalConstants.COL_FIRST_NAME);
+        cols.append(InternalConstants.COL_FIRST_NAME);
         schema.append(" VARCHAR(50), ");
         cols.append(", ");
-        schema.append(Constants.COL_LAST_NAME);
-        cols.append(Constants.COL_LAST_NAME);
+        schema.append(InternalConstants.COL_LAST_NAME);
+        cols.append(InternalConstants.COL_LAST_NAME);
         schema.append(" VARCHAR(50) ");
         personNameSchema = schema.toString();
         personNameColumns = cols.toString();

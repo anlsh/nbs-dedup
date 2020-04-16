@@ -1,11 +1,12 @@
 package abstraction;
 
+import Constants.InternalConstants;
+
 import exceptions.BadTableObjectException;
 import utils.ResultType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 /**
  * An enum where each value corresponds to a flag which can be matched on: for instance first name, or last name,
@@ -18,25 +19,25 @@ public enum MatchFieldEnum {
     UID {
         @Override public boolean isDeduplicableField() { return false; }
         @Override public String getHumanReadableName() { return "Unique ID"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_PERSON_UID}; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_PERSON_UID}; }
         @Override public Class getFieldType() { return Long.class; }
         @Override public String getTableName() {return "Person"; }
     },
     FIRST_NAME {
         @Override public String getHumanReadableName() { return "First Name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_FIRST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person_name"; }
     },
     LAST_NAME {
         @Override public String getHumanReadableName() { return "Last Name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_LAST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person_name"; }
     },
     SSN {
         @Override public String getHumanReadableName() { return "Social Security Number"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_SSN}; }
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person"; }
     },

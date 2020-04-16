@@ -1,5 +1,8 @@
 package abstraction;
 
+import Constants.InternalConstants;
+import Constants.Config;
+
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -61,9 +64,9 @@ public class DbAuxConstructor {
         String queryString = SQLQueryUtils.getSQLQueryForEntries(attrs, null);
         try {
             Statement query = conn.createStatement();
-            query.setFetchSize(Constants.fetch_size);
+            query.setFetchSize(Config.fetch_size);
             rs = query.executeQuery(queryString);
-            rs.setFetchSize(Constants.fetch_size);
+            rs.setFetchSize(Config.fetch_size);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -81,7 +84,7 @@ public class DbAuxConstructor {
         AuxMap aux = new AuxMap(attrs, idToHash, hashToIDs);
 
         // Is unused when num_threads == 1, but must be initialized anyways
-        ExecutorService executor = new BlockingThreadPool(num_threads, Constants.blocking_q_size);
+        ExecutorService executor = new BlockingThreadPool(num_threads, Config.fetch_size);
 
 
         // Loop over the items in the ResultSet, hashing them immediately or concurrently
@@ -110,7 +113,9 @@ public class DbAuxConstructor {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(Constants.HASHING_TIME_LIMIT_VAL, Constants.HASHING_TIME_LIMIT_UNITS);
+            executor.awaitTermination(
+                    InternalConstants.HASHING_TIME_LIMIT_VAL, InternalConstants.HASHING_TIME_LIMIT_UNITS
+            );
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -118,6 +123,6 @@ public class DbAuxConstructor {
     }
 
     public AuxMap constructAuxMap(final Set<MatchFieldEnum> attrs) {
-        return constructAuxMap(attrs, Constants.NUM_AUXMAP_THREADS);
+        return constructAuxMap(attrs, Config.NUM_AUXMAP_THREADS);
     }
 }

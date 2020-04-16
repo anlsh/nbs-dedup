@@ -1,6 +1,6 @@
 package utils;
 
-import abstraction.Constants;
+import Constants.InternalConstants;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,7 +43,7 @@ public class BlockingThreadPool extends ThreadPoolExecutor {
         // for more details
         super(
                 num_threads, num_threads,
-                Constants.THREAD_TIMEOUT_MILLIS, Constants.THREAD_TIMEOUT_UNITS,
+                InternalConstants.THREAD_TIMEOUT_MILLIS, InternalConstants.THREAD_TIMEOUT_UNITS,
                 new LimitedQueue<>(queue_capacity)
         );
     }

@@ -1,5 +1,8 @@
 package abstraction;
 
+import Constants.InternalConstants;
+import Constants.Config;
+
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
@@ -21,8 +24,8 @@ import java.util.*;
  */
 public class AuxMapManager {
 
-    private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + Constants.MANAGER_FILE_NAME;
-    public static String getDataRoot() { return Constants.AUX_DATA_ROOT; }
+    private static String AUXMAP_MANAGER = Config.AUX_DATA_ROOT + InternalConstants.MANAGER_FILE_NAME;
+    public static String getDataRoot() { return Config.AUX_DATA_ROOT; }
 
     /////////////////////////////////////////////////////////////////////////////
     // Section 1                                                               //
@@ -122,7 +125,7 @@ public class AuxMapManager {
 
         // Ensure that all AuxMaps described by the manager still exist
         for (String fnameAux : manager.keySet()) {
-            File auxFile = new File(Constants.AUX_DATA_ROOT + fnameAux);
+            File auxFile = new File(Config.AUX_DATA_ROOT + fnameAux);
             if (!auxFile.exists()) {
                 manager.remove(fnameAux);
             }
@@ -130,9 +133,9 @@ public class AuxMapManager {
 
         // Ensure that there are no orphan AuxMap files cluttering the directory and taking up space, but
         // make sure not to delete the manager file.
-        File directory = new File(Constants.AUX_DATA_ROOT);
+        File directory = new File(Config.AUX_DATA_ROOT);
         for (File file : directory.listFiles()) {
-            if (file.isFile() && file.getName().endsWith(Constants.AUX_FILE_EXTENSION)) {
+            if (file.isFile() && file.getName().endsWith(InternalConstants.AUX_FILE_EXTENSION)) {
                 if (!manager.keySet().contains(file.getName())) {
                     file.delete();
                 }
@@ -172,7 +175,7 @@ public class AuxMapManager {
         String attrHash = UnsignedLongs.toString(
                 Integer.toUnsignedLong(String.join("+", attrNames).hashCode())
         );
-        return attrHash + "." + Constants.AUX_FILE_EXTENSION;
+        return attrHash + "." + InternalConstants.AUX_FILE_EXTENSION;
     }
 
     /**
@@ -183,7 +186,7 @@ public class AuxMapManager {
      */
     @VisibleForTesting
     public static boolean auxMapExists(final Set<MatchFieldEnum> attrs) {
-        File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
+        File auxMapFile = new File(Config.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
         return auxMapFile.exists();
     }
 
@@ -198,7 +201,7 @@ public class AuxMapManager {
         removeFromAuxManager(aux.getAttrs());
 
         try {
-            File auxMapFile = new File(Constants.AUX_DATA_ROOT + mfieldSetToFilename(aux.getAttrs()));
+            File auxMapFile = new File(Config.AUX_DATA_ROOT + mfieldSetToFilename(aux.getAttrs()));
             if (auxMapFile.getParentFile() != null) {
                 auxMapFile.getParentFile().mkdirs();
             }
@@ -217,7 +220,7 @@ public class AuxMapManager {
 
     private static AuxMap loadAuxMapFromFile(final String filename){
         try {
-            FileInputStream fin = new FileInputStream(Constants.AUX_DATA_ROOT + filename);
+            FileInputStream fin = new FileInputStream(Config.AUX_DATA_ROOT + filename);
             FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();

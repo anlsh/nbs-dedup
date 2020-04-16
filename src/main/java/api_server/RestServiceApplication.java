@@ -1,6 +1,7 @@
 package api_server;
 
-import abstraction.Constants;
+import Constants.LocalDatabase;
+
 import abstraction.DbAuxConstructor;
 import abstraction.NBSConnectionFactory;
 import org.springframework.boot.SpringApplication;
@@ -14,8 +15,8 @@ public class RestServiceApplication {
     static DbAuxConstructor database;
 
     public static void main(String[] args) throws SQLException {
-        database = new DbAuxConstructor(NBSConnectionFactory.make(Constants.DB_SERVER, Constants.DB_PORT,
-                Constants.DB_NAME, Constants.DB_USERNAME, Constants.DB_PASSWORD));
+        database = new DbAuxConstructor(NBSConnectionFactory.make(LocalDatabase.DB_SERVER, LocalDatabase.DB_PORT,
+                LocalDatabase.DB_NAME, LocalDatabase.DB_USERNAME, LocalDatabase.DB_PASSWORD));
         SpringApplication.run(RestServiceApplication.class, args);
     }
 }

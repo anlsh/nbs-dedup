@@ -1,5 +1,7 @@
 package abstraction;
 
+import Constants.LocalDatabase;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Before;
@@ -20,8 +22,8 @@ public class connDbAuxConstructorRealDbTest {
     @Before
     public void setupDatabaseConnection() throws SQLException {
         Connection nbsConn = NBSConnectionFactory.make(
-                Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
-                Constants.DB_USERNAME, Constants.DB_PASSWORD
+                LocalDatabase.DB_SERVER, LocalDatabase.DB_PORT, LocalDatabase.DB_NAME,
+                LocalDatabase.DB_USERNAME, LocalDatabase.DB_PASSWORD
         );
         al = new DbAuxConstructor(nbsConn);
     }
