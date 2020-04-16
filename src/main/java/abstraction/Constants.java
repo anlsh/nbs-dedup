@@ -29,4 +29,7 @@ public class Constants {
 
     public static final int THREAD_TIMEOUT_MILLIS = 2000;
     public static final TimeUnit THREAD_TIMEOUT_UNITS = TimeUnit.MILLISECONDS;
+
+    public static final String AUX_FILE_EXTENSION = ".aux";
+    public static final String MANAGER_FILE_NAME = "manager.json";
 }

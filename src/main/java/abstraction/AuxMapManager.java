@@ -1,19 +1,24 @@
 package abstraction;
 
-import java.math.BigInteger;
 import java.sql.SQLException;
 import java.nio.channels.FileLock;
 
 import com.google.common.primitives.UnsignedLongs;
 import hashing.HashUtils;
 import com.google.gson.*;
+import utils.ConcurrentSetFactory;
 
 import java.io.*;
 import java.util.*;
 
+/**
+ * In order for the deduplication API to be performant, it is efficient to store AuxMaps on disk load/modify them when
+ * needed instead of continually traversing and re-hashing every entry in the database. This class handles the logic
+ * associated with managing local AuxMap files.
+ */
 public class AuxMapManager {
 
-    private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + "manager.json";
+    private static String AUXMAP_MANAGER = Constants.AUX_DATA_ROOT + Constants.MANAGER_FILE_NAME;
     public static String getDataRoot() { return Constants.AUX_DATA_ROOT; }
 
     /**
@@ -40,16 +45,48 @@ public class AuxMapManager {
         String attrHash = UnsignedLongs.toString(
                 Integer.toUnsignedLong(String.join("+", attrNames).hashCode())
         );
-        return attrHash + ".auxmap";
+        return attrHash + "." + Constants.AUX_FILE_EXTENSION;
     }
 
+    /**
+     * Loads the Json object stored in "manager.json" if it exists, otherwise create a new AuxMap object.
+     *
+     * @return      The Json object describing the currently cached AuxMaps
+     */
     private static JsonObject getOrCreateMapManager() {
-
         File managerFile = new File(AUXMAP_MANAGER);
         if (managerFile.exists()) {
             return loadManagerFromFile();
         } else {
             return new JsonObject();
+        }
+    }
+
+    /**
+     * Perform some basic cleanup operations on the storage directory: ie deletion
+     * "orphan" .auxmap files which are not recorded in manager.json and removing entries from manager.json which
+     * describe .auxmap files which no longer exist
+     */
+    public void cleanup() {
+        JsonObject manager = loadManagerFromFile();
+
+        // Ensure that all AuxMaps described by the manager still exist
+        for (String fnameAux : manager.keySet()) {
+            File auxFile = new File(Constants.AUX_DATA_ROOT + fnameAux);
+            if (!auxFile.exists()) {
+                manager.remove(fnameAux);
+            }
+        }
+
+        // Ensure that there are no orphan AuxMap files cluttering the directory and taking up space, but
+        // make sure not to delete the manager file.
+        File directory = new File(Constants.AUX_DATA_ROOT);
+        for (File file : directory.listFiles()) {
+            if (file.isFile() && file.getName().endsWith(Constants.AUX_FILE_EXTENSION)) {
+                if (!manager.keySet().contains(file.getName())) {
+                    file.delete();
+                }
+            }
         }
     }
 
@@ -68,7 +105,7 @@ public class AuxMapManager {
      * Save an AuxMap object to the filesystem
      * @param aux   An AuxMap object
      */
-    public static void saveAuxMapToFile(AuxMap aux) {
+    public static synchronized void saveAuxMapToFile(AuxMap aux) {
 
         hookManagerDeleteMap(aux.getAttrs()); //TODO this isn't the safe way to do this
         //We should be creating it under a temp name, then deleting the old one
@@ -85,7 +122,6 @@ public class AuxMapManager {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(aux);
             oos.close();
-
 
             hookManagerAddMap(aux);
         } catch (IOException e) {
@@ -111,7 +147,7 @@ public class AuxMapManager {
         }
     }
 
-    public static synchronized void hookManagerAddMap(AuxMap auxMap){
+    private static synchronized void hookManagerAddMap(AuxMap auxMap){
         JsonObject manager = getOrCreateMapManager();
         String fileName = mfieldSetToFilename(auxMap.getAttrs());
 
@@ -133,7 +169,7 @@ public class AuxMapManager {
         }
     }
 
-    public static AuxMap loadAuxMapFromFilename(final String filename){
+    private static AuxMap loadAuxMapFromFilename(final String filename){
         try {
             FileInputStream fin = new FileInputStream(filename);
             FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true); //TODO why are there arguments here but not for the other auxmap lock?
@@ -146,7 +182,7 @@ public class AuxMapManager {
         }
     }
 
-    public static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
+    static AuxMap loadAuxMapFromFile(final Set<MatchFieldEnum> attrs) {
         return loadAuxMapFromFilename(Constants.AUX_DATA_ROOT + mfieldSetToFilename(attrs));
     }
 
@@ -187,6 +223,7 @@ public class AuxMapManager {
             return aux;
         }
     }
+
     public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs) {
         return getAuxMap(db, attrs, false);
     }
