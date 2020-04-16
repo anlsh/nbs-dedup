@@ -1,5 +1,7 @@
 package hashing;
 
+import Constants.Config;
+
 import abstraction.MatchFieldEnum;
 import com.google.common.base.Charsets;
 import com.google.common.hash.*;
@@ -9,7 +11,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 public class HashUtils {
-    public static HashFunction hashFunction = Hashing.sipHash24();
+    private static HashFunction hashFunction = Config.HASH_FUNCTION;
     private static Charset charset = Charsets.UTF_8; //Whatever NBS uses, change this to that.
     private static Charset schemaCharset = Charsets.UTF_8;
     //Note that all HashCode objects have a asLong() function, as well as asBytes()
