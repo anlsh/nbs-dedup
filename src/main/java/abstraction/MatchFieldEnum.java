@@ -20,29 +20,25 @@ public enum MatchFieldEnum {
         @Override public String getHumanReadableName() { return "Unique ID"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_PERSON_UID}; }
         @Override public Class getFieldType() { return Long.class; }
-        @Override public String getTableName() {return "Person";}
-        @Override public Object getFromString(String s) {return Long.parseLong(s);}
+        @Override public String getTableName() {return "Person"; }
     },
     FIRST_NAME {
         @Override public String getHumanReadableName() { return "First Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_FIRST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person_name";}
-        @Override public Object getFromString(String s) {return s;}
+        @Override public String getTableName() {return "Person_name"; }
     },
     LAST_NAME {
         @Override public String getHumanReadableName() { return "Last Name"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_LAST_NAME}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person_name";}
-        @Override public Object getFromString(String s) {return s;}
+        @Override public String getTableName() {return "Person_name"; }
     },
     SSN {
         @Override public String getHumanReadableName() { return "Social Security Number"; }
         @Override public String[] getRequiredColumnsArray() { return new String[]{Constants.COL_SSN}; }
         @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person";}
-        @Override public Object getFromString(String s) {return s;}
+        @Override public String getTableName() {return "Person"; }
     },
     SSN_LAST_FOUR {
         @Override public MatchFieldEnum getParent() { return SSN; }
@@ -57,8 +53,7 @@ public enum MatchFieldEnum {
             }
         }
         @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person";}
-        @Override public Object getFromString(String s) {return s;}
+        @Override public String getTableName() {return "Person"; }
     };
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
@@ -94,13 +89,6 @@ public enum MatchFieldEnum {
      */
     public abstract String[] getRequiredColumnsArray();
 
-    /**
-     * Returns an object of the correct type from a string representing a value of this field
-     * @param s the string
-     * @return
-     */
-    public abstract Object getFromString(String s);
-
     /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
      * value.
      *
@@ -132,17 +120,6 @@ public enum MatchFieldEnum {
             throw new BadTableObjectException(tableObj, this);
         }
     };
-
-    public ResultType getFieldValue(String[] cols, String[] vals) {
-        if(getRequiredColumnsArray().length != 1) {
-            throw new RuntimeException("Using default getFieldValue to retrieve information " +
-                    "depending on multiple fields");
-        }
-        String colname = SQLQueryUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0]);
-        int index = Arrays.asList(cols).indexOf(colname);
-        if(index < 0) return new ResultType(null, true);
-        return new ResultType(getFromString(vals[index]), false);
-    }
 
     /** Returns the underlying type of the attribute: should be suitable as a cast target for the corresponding
      * value of getFieldValue()
