@@ -26,8 +26,9 @@ public class AuxMapManagerTest extends DummyDeduplicationTest {
 
         // Make sure the construction is deterministic
         assert auxFnameFirst.equals(AuxMapManager.mfieldSetToFilename(Sets.newHashSet(MatchFieldEnum.FIRST_NAME)));
-        // And injective
-        assert !auxFnameFirst.equals(auxFnameLast); //TODO there is actually a small chance of collision here!
+        // And injective (there's a very, *very* small chance of collision here: if this test ever fails then
+        // you're having a very unlucky day :D
+        assert !auxFnameFirst.equals(auxFnameLast);
     }
 
     @Test

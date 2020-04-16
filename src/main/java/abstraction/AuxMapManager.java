@@ -24,7 +24,7 @@ public class AuxMapManager {
     /**
      * Condenses a set of MatchFieldEnum into a the filename for the corresponding AuxMap
      *
-     * TODO Since the underlying mechanism is a hash, it is theoretically possible that names could conflict.
+     * Since the underlying mechanism is a hash, it is theoretically possible that names could conflict.
      * The chances of this happening are very low, about one in a hundred thousand for any "reasonable" number of
      * AuxMaps. In all likelihood, the server would run out of space for AuxMaps before encountering a collision.
      *
@@ -178,7 +178,7 @@ public class AuxMapManager {
     private static AuxMap loadAuxMapFromFile(final String filename){
         try {
             FileInputStream fin = new FileInputStream(Constants.AUX_DATA_ROOT + filename);
-            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true); //TODO why are there arguments here but not for the other auxmap lock?
+            FileLock lock = fin.getChannel().lock(0L, Long.MAX_VALUE, true);
             ObjectInputStream ois = new ObjectInputStream(fin);
             AuxMap aux = (AuxMap) ois.readObject();
             ois.close();
