@@ -58,7 +58,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
 
     @Before
     public void populateTables() throws SQLException {
-        System.out.println("Populating tables");
         dummy_conn.insertRow("Person", personColumns, "123, '999-99-9999'");
         dummy_conn.insertRow("Person", personColumns, "124, '999-99-9990'");
         dummy_conn.insertRow("Person", personColumns, "125, '999-99-9999'");
@@ -72,7 +71,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
 
     @Before
     public void deleteAuxMapDir() throws IOException {
-        System.out.println("Deleting auxmap dir");
         FileUtils.deleteDirectory(new File(AuxMapManager.getDataRoot()));
     }
 
@@ -87,9 +85,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
         attrs.add(MatchFieldEnum.FIRST_NAME);
         attrs.add(MatchFieldEnum.SSN);
         Map<MatchFieldEnum, Object> results = al.getFieldsById(123l, attrs);
-        for(MatchFieldEnum key : results.keySet()) {
-            System.out.println(key + " : " + results.get(key));
-        }
         Map<MatchFieldEnum, Object> expectedResults = new HashMap<>();
         expectedResults.put(MatchFieldEnum.FIRST_NAME, "Joe");
         expectedResults.put(MatchFieldEnum.SSN, "999-99-9999");
@@ -102,14 +97,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
         ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
         config.add(attrs);
         Set<Set<Long> > matchingIDs = Deduplication.getMatchingMerged(al, config);
-        System.out.println("Matching IDs:");
-        for(Set<Long> matchingIDSet : matchingIDs) {
-            System.out.print("\t[");
-            for (Long l : matchingIDSet) {
-                System.out.print(l + ", ");
-            }
-            System.out.println("]");
-        }
         Set<Set<Long> > expectedMatchingIDs = new HashSet<>();
         Set<Long> temp = new HashSet<>();
         temp.add(123l);
@@ -129,14 +116,6 @@ public class DummyDeduplicationTest extends DummyDataTest {
         ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
         config.add(attrs);
         Set<Set<Long> > matchingIDs = Deduplication.getMatchingMerged(al, config);
-        System.out.println("Matching IDs:");
-        for(Set<Long> matchingIDSet : matchingIDs) {
-            System.out.print("\t[");
-            for (Long l : matchingIDSet) {
-                System.out.print(l + ", ");
-            }
-            System.out.println("]");
-        }
         Set<Set<Long> > expectedMatchingIDs = new HashSet<>();
         Set<Long> temp = new HashSet<>();
         temp.add(123l);

@@ -40,6 +40,5 @@ public class DeduplicationTest {
         config.add(Sets.newHashSet(MatchFieldEnum.SSN, MatchFieldEnum.LAST_NAME));
 
         Set<Set<Long>> res = Deduplication.getMatchingMerged(db, config);
-        System.out.println("merged results " + res.toString());
     }
 }

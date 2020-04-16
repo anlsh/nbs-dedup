@@ -25,9 +25,7 @@ public class DummyDbAuxConstructorTest extends DummyDeduplicationTest {
         ArrayList<Set<MatchFieldEnum> > config = new ArrayList<>();
         config.add(attrs);
         AuxMap stAuxMap = al.constructAuxMap(attrs, 1);
-        System.out.println("ST AUXMAP: " + stAuxMap);
         AuxMap mtAuxMap = al.constructAuxMap(attrs, 4);
-        System.out.println("MT AUXMAP: " + mtAuxMap);
         assert(stAuxMap.equals(mtAuxMap));
         assert(!auxMapIsEmpty(stAuxMap));
     }
