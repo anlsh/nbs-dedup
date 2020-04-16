@@ -215,7 +215,7 @@ public class AuxMapManager {
      * @param delete_existing       Whether to overwrite the existing AuxMap, if it exists, with a freshly-created one
      * @return                      A populated AuxMap for "attrs"
      */
-    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
+    public static AuxMap getAuxMap(DbAuxConstructor db, Set<MatchFieldEnum> attrs, boolean delete_existing) {
         if (delete_existing) {
             hookManagerDeleteMap(attrs);
         }
@@ -243,7 +243,7 @@ public class AuxMapManager {
      * @param attrs     The set of MatchFields for which to create an AuxMap
      * @return          A populated AuxMap for "attrs"
      */
-    public static AuxMap getAuxMap(AuxLogic db, Set<MatchFieldEnum> attrs) {
+    public static AuxMap getAuxMap(DbAuxConstructor db, Set<MatchFieldEnum> attrs) {
         return getAuxMap(db, attrs, false);
     }
 
@@ -262,7 +262,7 @@ public class AuxMapManager {
      * @param uid               the uid added
      * @throws SQLException     When retrieving attribute values from the database fails
      */
-    public static synchronized void hookAddRecord(AuxLogic al, long uid) throws SQLException {
+    public static synchronized void hookAddRecord(DbAuxConstructor al, long uid) throws SQLException {
         JsonObject auxmapManager = getOrCreateMapManager();
         for(Object filename : auxmapManager.keySet()) {
             AuxMap auxmap = loadAuxMapFromFile((String) filename);

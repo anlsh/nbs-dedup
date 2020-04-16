@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DummyAuxLogicTest extends DummyDeduplicationTest {
+public class DummyDbAuxConstructorTest extends DummyDeduplicationTest {
 
     private boolean auxMapIsEmpty(AuxMap aux) {
         // For debug to see if its broken

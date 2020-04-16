@@ -10,11 +10,18 @@ import utils.AggregateResultType;
 import utils.BlockingThreadPool;
 import utils.ResultType;
 
-public class AuxLogic {
+/**
+ * A wrapper object which implements the logic of constructing AuxMaps.
+ *
+ * All the functions in here could really be made static if they had an extra "Connection" argument: instances of this
+ * class don't really modify or manage the connection object in any meaningful way. However we found that the current
+ * implementation made the code more concise.
+ */
+public class DbAuxConstructor {
 
     private Connection conn;
 
-    public AuxLogic(Connection conn) {
+    public DbAuxConstructor(Connection conn) {
         this.conn = conn;
     }
 

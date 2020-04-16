@@ -6,18 +6,15 @@ import org.junit.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class DummyDataTest {
-    protected static AuxLogic al;
+    protected static DbAuxConstructor al;
     protected static DummyDataConnAux dummy_conn;
 
     @BeforeClass
     public static void setupDb() throws SQLException, ClassNotFoundException {
         dummy_conn = new DummyDataConnAux("test_db");
-        al = new AuxLogic(dummy_conn.conn);
+        al = new DbAuxConstructor(dummy_conn.conn);
     }
     @AfterClass
     public static void closeDbConnection() {

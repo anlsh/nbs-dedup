@@ -13,9 +13,9 @@ import java.sql.SQLException;
  * Since we don't know the data in the database necessarily, the tests in this class ensure that none of the auxmap
  * constructions fail. For tests which verify the actual logic of our algorithms, see DummyDataTest
  */
-public class connAuxLogicRealDbTest {
+public class connDbAuxConstructorRealDbTest {
 
-    private AuxLogic al;
+    private DbAuxConstructor al;
 
     @Before
     public void setupDatabaseConnection() throws SQLException {
@@ -23,7 +23,7 @@ public class connAuxLogicRealDbTest {
                 Constants.DB_SERVER, Constants.DB_PORT, Constants.DB_NAME,
                 Constants.DB_USERNAME, Constants.DB_PASSWORD
         );
-        al = new AuxLogic(nbsConn);
+        al = new DbAuxConstructor(nbsConn);
     }
 
     /**

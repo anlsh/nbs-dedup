@@ -31,9 +31,9 @@ public class Deduplication {
      * @param config    the configuration specifying what counts as a "match"
      * @return          the list of sets of matching groups
      * @throws SQLException
-     * @see             Deduplication#getMatchingMerged(AuxLogic, List)
+     * @see             Deduplication#getMatchingMerged(DbAuxConstructor, List)
      */
-    public static List<Set<Set<Long>>> getMatching(AuxLogic db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    public static List<Set<Set<Long>>> getMatching(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
 
@@ -76,9 +76,9 @@ public class Deduplication {
      * @param config    the configuration specifying what counts as a "match"
      * @return          the set of matching groups
      * @throws SQLException
-     * @see             Deduplication#getMatching(AuxLogic, List)
+     * @see             Deduplication#getMatching(DbAuxConstructor, List)
      */
-    public static Set<Set<Long>> getMatchingMerged(AuxLogic db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    public static Set<Set<Long>> getMatchingMerged(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
         return MergeUtils.merge(getMatching(db, config));
     }
 }
