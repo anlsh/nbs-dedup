@@ -1,6 +1,7 @@
 package algorithm;
 
 import abstraction.*;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.*;
 
@@ -33,7 +34,8 @@ public class Deduplication {
      * @throws SQLException
      * @see             Deduplication#getMatchingMerged(DbAuxConstructor, List)
      */
-    public static List<Set<Set<Long>>> getMatching(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
+    @VisibleForTesting
+    public static List<Set<Set<Long>>> getMatchingHelper(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
         //each set in all matches corresponds to a configuration
         List<Set<Set<Long>>> allMatches = new ArrayList<>();
 
@@ -63,6 +65,31 @@ public class Deduplication {
     }
 
     /**
+     * Concatenates the groups detected for each subconfiguration of config and returns the resulting set.
+     *
+     * The matches returned by this function are not aggressively merged. This means that
+     *
+     *     1. Any given patient_uid may be part of more than one group,
+     *     2. If some group contains A and B, and some group contains B and C, there is not guaranteed to be a group
+     *        containing A and C.
+     *
+     * @param db        the database (AuxLogic) to look in for records/ids
+     * @param config    the configuration specifying what counts as a "match"
+     * @return          the set of matching groups
+     * @throws SQLException
+     */
+    public static Set<Set<Long>> getMatchingNotMerge(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
+        List<Set<Set<Long>>> allConfigMatched = getMatchingHelper(db, config);
+        Set<Set<Long>> toReturn = new HashSet<>();
+
+        for (Set<Set<Long>> configMatches : allConfigMatched) {
+            toReturn.addAll(configMatches);
+        }
+
+        return toReturn;
+    }
+
+    /**
      * Takes a config to match on, and returns sets of groups of IDs that match
      * under the specified config.
      *
@@ -76,9 +103,9 @@ public class Deduplication {
      * @param config    the configuration specifying what counts as a "match"
      * @return          the set of matching groups
      * @throws SQLException
-     * @see             Deduplication#getMatching(DbAuxConstructor, List)
+     * @see             Deduplication#getMatchingHelper(DbAuxConstructor, List)
      */
     public static Set<Set<Long>> getMatchingMerged(DbAuxConstructor db, List<Set<MatchFieldEnum>> config) throws SQLException {
-        return MergeUtils.merge(getMatching(db, config));
+        return MergeUtils.merge(getMatchingHelper(db, config));
     }
 }

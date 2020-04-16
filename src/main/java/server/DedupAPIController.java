@@ -10,11 +10,20 @@ import com.google.gson.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+/**
+ * Class specifying INSECURE rest endpoints for the deduplication API. Documentation is provided in the provided
+ * PostMan project.
+ */
 @RestController
 @CrossOrigin
 public class DedupAPIController {
 
-    static Set<MatchFieldEnum> nameArrayToMatchFieldSet(JsonArray payload) {
+    /**
+     * Given a Json list of strings, parse the corresponding Java set of MatchFieldEnums
+     * @param payload   A JsonArray of strings, each element of which is the name of a MatchFieldEnum value
+     * @return
+     */
+    private static Set<MatchFieldEnum> nameArrayToMatchFieldSet(JsonArray payload) {
         Set<MatchFieldEnum> subconfig = new HashSet<>();
 
         for (JsonElement el : payload) {
@@ -22,6 +31,22 @@ public class DedupAPIController {
         }
 
         return subconfig;
+    }
+
+    /**
+     * Given a string argument representing a configuration (list of subconfigs), parse the corresponding Java argument
+     * @param data  An (encoded) json list of list of strings.
+     * @return
+     */
+    static List<Set<MatchFieldEnum>> configFromString(String data) {
+        JsonArray payload_ls = (new Gson()).fromJson(data, JsonArray.class);
+
+        List<Set<MatchFieldEnum>> config_ls = new ArrayList<>();
+
+        for (JsonElement el : payload_ls) {
+            config_ls.add(nameArrayToMatchFieldSet(el.getAsJsonArray()));
+        }
+        return config_ls;
     }
 
     @GetMapping("get_dedup_flags")
@@ -49,8 +74,8 @@ public class DedupAPIController {
         Gson gson = new Gson();
         JsonArray payload = gson.fromJson(data, JsonArray.class);
         Set<MatchFieldEnum> subconfig = nameArrayToMatchFieldSet(payload);
-        AuxMapManager.getAuxMap(RestServiceApplication.database, subconfig);
 
+        AuxMapManager.getAuxMap(RestServiceApplication.database, subconfig);
         return true;
     }
 
@@ -59,25 +84,19 @@ public class DedupAPIController {
 
         Gson gson = new Gson();
         JsonArray payload = gson.fromJson(data, JsonArray.class);
-
         Set<MatchFieldEnum> subconfig = nameArrayToMatchFieldSet(payload);
-        AuxMapManager.removeFromAuxManager(subconfig);
 
+        AuxMapManager.removeFromAuxManager(subconfig);
         return true;
     }
 
-    @GetMapping("deduplicate")
+    @GetMapping("deduplicate_merged")
     public String deduplicate(@RequestParam("data") String data) throws SQLException {
 
-        JsonArray payload_ls = (new Gson()).fromJson(data, JsonArray.class);
-
-        List<Set<MatchFieldEnum>> config_ls = new ArrayList<>();
-
-        for (JsonElement el : payload_ls) {
-            config_ls.add(nameArrayToMatchFieldSet(el.getAsJsonArray()));
-        }
-
-        Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(RestServiceApplication.database, config_ls);
+        Set<Set<Long>> duplicates = Deduplication.getMatchingMerged(
+                RestServiceApplication.database,
+                configFromString(data)
+        );
 
         return (new Gson()).toJson(duplicates);
     }

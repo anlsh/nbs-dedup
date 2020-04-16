@@ -30,7 +30,7 @@ public class DeduplicationTest {
                 MatchFieldEnum.SSN,
                 MatchFieldEnum.LAST_NAME
         ));
-        List<Set<Set<Long>>> res = Deduplication.getMatching(db, config);
+        List<Set<Set<Long>>> res = Deduplication.getMatchingHelper(db, config);
     }
 
     @Test
