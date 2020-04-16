@@ -1,0 +1,61 @@
+.ButtonContainer1 {
+  display: flex;
+  justify-content: flex-end;
+}
+.Button1 {
+  width: 20rem;
+}
+.Modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.Root {
+  width: 100%;
+}
+.TextField {
+  padding-left: 5rem;
+  padding-top: 5rem;
+}
+.Paper {
+  padding: 2rem;
+  width: 30vw;
+}
+.Paper1 {
+  padding-top: 0rem;
+  padding-bottom: 2rem;
+  padding-left: 2rem;
+  width: 30vw;
+}
+.FormControl {
+  padding-right: 1rem;
+}
+.Header {
+  padding-bottom: 1rem;
+  margin-left: 16px;
+}
+.Grid {
+  padding-bottom: 2rem;
+}
+.ButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+}
+.ButtonContainerLeft {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+.Button {
+  margin-left: 1rem;
+  width: 7rem;
+}
+.MuiIconButton-root.Mui-disabled {
+  color: black !important;
+}
+.XButtonAlignment {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
