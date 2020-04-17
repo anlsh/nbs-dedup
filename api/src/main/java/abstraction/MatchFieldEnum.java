@@ -2,11 +2,15 @@ package abstraction;
 
 import Constants.InternalConstants;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import utils.BadTableObjectException;
 import utils.ResultType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * An enum where each value corresponds to a flag which can be matched on: for instance first name, or last name,
@@ -17,34 +21,48 @@ public enum MatchFieldEnum {
     // class. Implementing the functions here unfortunately leads to a very long file, but gives a compile-time
     // guarantee that every flag implements everything that it needs to.
     UID {
-        @Override public boolean isDeduplicableField() { return false; }
-        @Override public String getHumanReadableName() { return "Unique ID"; }
-        @Override public Class getFieldType() { return Long.class; }
-        @Override public String getTableName() {return "Person"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_PERSON_UID}; }
+        public boolean isDeduplicableField() { return false; }
+        public String getHumanReadableName() { return "Unique ID"; }
+        public Map<String, Set<String>> getDbDeps() {
+            return ImmutableMap.<String, Set<String>>builder()
+                    .put("Person", Sets.newHashSet("person_uid"))
+                    .build();
+        }
+        public Class getFieldType() { return Long.class; }
     },
     FIRST_NAME {
-        @Override public String getHumanReadableName() { return "First Name"; }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person_name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_FIRST_NAME}; }
+        public String getHumanReadableName() { return "First Name"; }
+        public Class getFieldType() { return String.class; }
+        public Map<String, Set<String>> getDbDeps() {
+            return ImmutableMap.<String, Set<String>>builder()
+                    .put("Person_name", Sets.newHashSet(InternalConstants.COL_FIRST_NAME))
+                    //.put("Person", Sets.newHashSet(InternalConstants.COL_FIRST_NAME))
+                    .build();
+        }
     },
     LAST_NAME {
-        @Override public String getHumanReadableName() { return "Last Name"; }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person_name"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_LAST_NAME}; }
+        public String getHumanReadableName() { return "Last Name"; }
+        public Class getFieldType() { return String.class; }
+        public Map<String, Set<String>> getDbDeps() {
+            return ImmutableMap.<String, Set<String>>builder()
+                    .put("Person_name", Sets.newHashSet(InternalConstants.COL_LAST_NAME))
+                    //.put("Person", Sets.newHashSet(InternalConstants.COL_LAST_NAME))
+                    .build();
+        }
     },
     SSN {
-        @Override public String getHumanReadableName() { return "Social Security Number"; }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{InternalConstants.COL_SSN}; }
+        public String getHumanReadableName() { return "Social Security Number"; }
+        public Class getFieldType() { return String.class; }
+        public Map<String, Set<String>> getDbDeps() {
+            return ImmutableMap.<String, Set<String>>builder()
+                    .put("Person", Sets.newHashSet(InternalConstants.COL_SSN))
+                    .build();
+        }
     },
     SSN_LAST_FOUR {
-        @Override public MatchFieldEnum getParent() { return SSN; }
-        @Override public String getHumanReadableName() { return "SSN (last four digits)"; }
-        @Override public ResultType getFieldValue(ResultSet rs) throws SQLException {
+        public MatchFieldEnum getParent() { return SSN; }
+        public String getHumanReadableName() { return "SSN (last four digits)"; }
+        public ResultType getFieldValue(ResultSet rs) throws SQLException {
             ResultType ssn = SSN.getFieldValue(rs);
             if (ssn.isUnknown()) { return new ResultType(null, true); }
             else {
@@ -52,15 +70,19 @@ public enum MatchFieldEnum {
                 return new ResultType(ssnStr.substring(ssnStr.length() - 4), false);
             }
         }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() {return "Person"; }
-        @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
+        public Class getFieldType() { return String.class; }
+        public Map<String, Set<String>> getDbDeps() {
+            return SSN.getDbDeps();
+        }
     },
     RACE {
-        @Override public String getHumanReadableName() { return "Race"; }
-        @Override public Class getFieldType() { return String.class; }
-        @Override public String getTableName() { return "Person_race"; }
-        @Override public String[] getRequiredColumnsArray() { return new String[]{"race_cd"}; }
+        public String getHumanReadableName() { return "Race"; }
+        public Class getFieldType() { return String.class; }
+        public Map<String, Set<String>> getDbDeps() {
+            return ImmutableMap.<String, Set<String>>builder()
+                    .put("Person_race", Sets.newHashSet("race_cd"))
+                    .build();
+        }
     };
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false
@@ -87,21 +109,15 @@ public enum MatchFieldEnum {
      */
     public abstract String getHumanReadableName();
 
-    /** Returns the name of the table on which this attribute depends. Each attribute can only depend on a single table
-     * at the moment, as we see no reason to augment this functionality.
-     *
-     * TODO Should allow depending on multiple tables.
+    /**
+     * An attribute can depend on multiple columns in a table, or even columns across different tables. This function
+     * returns a map where the keys are the tables depends on, and the values are requested sets of column names in
+     * each table.
      *
      * @return  The dependent table name
      */
-    public abstract String getTableName();
-
-    /** Returns a list of columns which the attribute depends on *within its table*. So for example the FIRST_NM
-     * flag which depends on the "first_nm" column from the "Person_name" table would return ["first_nm"], and its
-     * getTableName() should return "Person_name"
-     * @return
-     */
-    public abstract String[] getRequiredColumnsArray();
+    // Curses on Java, what would be simple to encode in Python involves some pretty tedious code in this language.
+    public abstract Map<String, Set<String>> getDbDeps();
 
     /** Given a ResultSet consisting of several columns, perform whatever logic is necessary to extract the attribute's
      * value.
@@ -117,12 +133,18 @@ public enum MatchFieldEnum {
      * @throws SQLException
      */
     public ResultType getFieldValue(ResultSet rs) throws SQLException, BadTableObjectException {
-        if (getRequiredColumnsArray().length != 1) {
+
+        Map<String, Set<String>> deps = getDbDeps();
+
+        String aTable = (String) deps.keySet().toArray()[0];
+        String aColumn = (String) deps.get(aTable).toArray()[0];
+
+        if (deps.keySet().size() != 1 || deps.get(aTable).size() != 1) {
             throw new RuntimeException("Using default getFieldValue to retrieve information " +
-                    "depending on multiple fields");
+                    "depending on multiple tables or columns");
         }
         Object tableObj = rs.getObject(
-                SQLQueryUtils.getAliasedColName(getTableName(), getRequiredColumnsArray()[0])
+                SQLQueryUtils.getAliasedColName(aTable, aColumn)
         );
 
         if (tableObj == null) {

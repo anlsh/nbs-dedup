@@ -37,18 +37,21 @@ public class SQLQueryUtils {
     }
 
     /**
-     * Given a set of MatchFieldEnums, generate a map from required database tables to the match fields depending on
-     * them
+     * Given a set of MatchFieldEnums, generate a map from required database tables to the columns which are required
+     * from each table.
      *
      * @param attrs     A set of MatchFieldEnums
-     * @return          A map from database table names to dependent MatchFieldEnums
+     * @return          A map from database table names to dependent columns required for "attrs"
      */
-    private static Map<String, Set<MatchFieldEnum>> getTableNameMap(Set<MatchFieldEnum> attrs) {
-        Map<String, Set<MatchFieldEnum>> ret = new HashMap<>();
-        for(MatchFieldEnum e : attrs) {
-            Set<MatchFieldEnum> entry = ret.getOrDefault(e.getTableName(), new HashSet<>());
-            entry.add(e);
-            ret.put(e.getTableName(), entry);
+    private static Map<String, Set<String>> getAttrSetDbDeps(Set<MatchFieldEnum> attrs) {
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for(MatchFieldEnum mfield : attrs) {
+            Map<String, Set<String>> attrDeps = mfield.getDbDeps();
+            for (String tableName : attrDeps.keySet()) {
+                ret.putIfAbsent(tableName, new HashSet<>());
+                ret.get(tableName).addAll(attrDeps.get(tableName));
+            }
         }
         return ret;
     }
@@ -86,27 +89,27 @@ public class SQLQueryUtils {
         attrs = new HashSet<>(attrs);
         attrs.add(MatchFieldEnum.UID);
 
-        Map<String, Set<MatchFieldEnum>> tableNameMap = getTableNameMap(attrs);
-        List<String> tableColumns = new ArrayList<>();
+        Map<String, Set<String>> dbDeps = getAttrSetDbDeps(attrs);
+        List<String> qualifiedTableColumns = new ArrayList<>();
         String queryString = "SELECT ";
-        for(String tableName : tableNameMap.keySet()) {
+        for(String tableName : dbDeps.keySet()) {
             List<String> currTableColumns = new ArrayList<>();
+
+            // Always align based on the person_uid column
             currTableColumns.add(
                     SQLQueryUtils.getSQLQualifiedColName(tableName, InternalConstants.COL_PERSON_UID)
                             + " as " + SQLQueryUtils.getAliasedColName(tableName, InternalConstants.COL_PERSON_UID)
             );
-            for (MatchFieldEnum mfield : tableNameMap.get(tableName)) {
-                for(String reqiredColumn : mfield.getRequiredColumnsArray()) {
-                    currTableColumns.add(
-                            SQLQueryUtils.getSQLQualifiedColName(tableName, reqiredColumn)
-                                    + " as " + SQLQueryUtils.getAliasedColName(tableName, reqiredColumn)
-                    );
-                }
+            for (String reqCol : dbDeps.get(tableName)) {
+                currTableColumns.add(
+                        SQLQueryUtils.getSQLQualifiedColName(tableName, reqCol)
+                                + " as " + SQLQueryUtils.getAliasedColName(tableName, reqCol)
+                );
             }
-            tableColumns.add(String.join(", ", currTableColumns));
+            qualifiedTableColumns.add(String.join(", ", currTableColumns));
         }
-        queryString += String.join(", ", tableColumns);
-        queryString += " from " + String.join(", ", Lists.newArrayList(tableNameMap.keySet()));
+        queryString += String.join(", ", qualifiedTableColumns);
+        queryString += " from " + String.join(", ", Lists.newArrayList(dbDeps.keySet()));
 
         // If only fetching for a single id, add that constraint to the query
         List<String> where_clauses = new ArrayList<>();
@@ -118,8 +121,8 @@ public class SQLQueryUtils {
                     + " = " + uid);
         }
         // Align the columns from each table by the person_uid column.
-        if (tableNameMap.keySet().size() > 1) {
-            Iterator<String> iter = tableNameMap.keySet().iterator();
+        if (dbDeps.keySet().size() > 1) {
+            Iterator<String> iter = dbDeps.keySet().iterator();
             String primaryTableUID = SQLQueryUtils.getSQLQualifiedColName(
                     InternalConstants.PRIMARY_TABLE_NAME,
                     InternalConstants.COL_PERSON_UID
