@@ -1,0 +1,179 @@
+{
+	"info": {
+		"_postman_id": "4b037830-e892-4683-ac57-5b8533dc8700",
+		"name": "dedup-rest",
+		"description": "# Introduction\nThis is a brief set of examples to demonstrate the format and specification of the REST endpoints implemented by the API server.\n\nThe requests provide everything a UI would need to interact with the deduplication API. Crucially, however there is no form of authentication implemented.\n\n# Concerning errors and status codes\nAs our demo UI will end up being re-implemented in NBS, the REST api was kept to the minimum functionality necessary to implement the API, while at the same performing enough logic to be useful. As such, the API does not specifically signal error codes: exceptions in the underyling Java code are propagated upwards as generic HTTP errors",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get_dedup_flags (Getting Deduplication Flags)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server-url}}:{{server-port}}/get_dedup_flags",
+					"host": [
+						"{{server-url}}"
+					],
+					"port": "{{server-port}}",
+					"path": [
+						"get_dedup_flags"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Example 1",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{server-url}}:{{server-port}}/get_dedup_flags",
+							"host": [
+								"{{server-url}}"
+							],
+							"port": "{{server-port}}",
+							"path": [
+								"get_dedup_flags"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Vary",
+							"value": "Origin"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Method"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Headers"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/plain;charset=UTF-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "264"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 16 Apr 2020 17:56:09 GMT"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"attr_code\": \"FIRST_NAME\",\n        \"parent\": null,\n        \"desc\": \"First Name\"\n    },\n    {\n        \"attr_code\": \"LAST_NAME\",\n        \"parent\": null,\n        \"desc\": \"Last Name\"\n    },\n    {\n        \"attr_code\": \"SSN\",\n        \"parent\": null,\n        \"desc\": \"Social Security Number\"\n    },\n    {\n        \"attr_code\": \"SSN_LAST_FOUR\",\n        \"parent\": \"SSN\",\n        \"desc\": \"SSN (last four digits)\"\n    }\n]"
+				}
+			]
+		},
+		{
+			"name": "deduplicate_merged",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": [
+				{
+					"name": "Example 1",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{server-url}}:{{server-port}}/deduplicate_merged?data=%5B%5B%22FIRST_NAME%22%5D%2C%5B%22LAST_NAME%22%5D%5D",
+							"host": [
+								"{{server-url}}"
+							],
+							"port": "{{server-port}}",
+							"path": [
+								"deduplicate_merged"
+							],
+							"query": [
+								{
+									"key": "data",
+									"value": "%5B%5B%22FIRST_NAME%22%5D%2C%5B%22LAST_NAME%22%5D%5D"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Vary",
+							"value": "Origin"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Method"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Headers"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/plain;charset=UTF-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "4310"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 16 Apr 2020 22:18:10 GMT"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    [\n        10039018,\n        10039020,\n        10039157\n    ],\n    [\n        10016858,\n        10016854\n    ],\n    [\n        10041049,\n        10041047\n    ],\n    [\n        10041041,\n        10041056\n    ],\n    [\n        10016345,\n        10016347\n    ],\n    [\n        10023074,\n        10023060,\n        10023062\n    ],\n    [\n        10015146,\n        10015148,\n        10015151,\n        10024000,\n        10015154\n    ],\n    [\n        10007001,\n        10024037\n    ],\n    [\n        10016910,\n        10016915\n    ],\n    [\n        10041097\n    ],\n    [\n        10007000,\n        10007002,\n        10007003,\n        10024036\n    ],\n    [\n        10011137,\n        10011170\n    ],\n    [\n        10035130,\n        10035085,\n        10035090\n    ],\n    [\n        10042329,\n        10045000,\n        10042331,\n        10046045,\n        10042302,\n        10042211,\n        10042196,\n        10042326,\n        10042198\n    ],\n    [\n        10029145,\n        10031000,\n        10029211,\n        10031002,\n        10031005,\n        10032031,\n        10032017,\n        10032019,\n        10029202,\n        10032022,\n        10029193,\n        10039243,\n        10029006,\n        10029134,\n        10029251,\n        10032068,\n        10032071,\n        10029127,\n        10029113,\n        10029240,\n        10029055,\n        10029169,\n        10029106,\n        10029045,\n        10029096,\n        10029162,\n        10029036,\n        10029231,\n        10016558,\n        10029152,\n        10029027,\n        10032034,\n        10029221\n    ],\n    [\n        10015000,\n        10015131,\n        10015006\n    ],\n    [\n        10016297,\n        10017025,\n        10016295\n    ],\n    [\n        10035099,\n        10035098,\n        10035101,\n        10016253,\n        10035100,\n        10035103,\n        10016254,\n        10016255,\n        10015051,\n        10015052,\n        10015053,\n        10015055,\n        10016352,\n        10016256,\n        10016353,\n        10016258,\n        10016354,\n        10016355,\n        10016357,\n        10015047\n    ],\n    [\n        10039194,\n        10039069,\n        10039072\n    ],\n    [\n        10011038,\n        10011025,\n        10011046\n    ],\n    [\n        10015088,\n        10016240,\n        10016241,\n        10015090\n    ],\n    [\n        10011196\n    ],\n    [\n        10042250,\n        10042252\n    ],\n    [\n        10016136,\n        10016140\n    ],\n    [\n        10042056,\n        10045002,\n        10042063,\n        10042000,\n        10042418,\n        10042404,\n        10042006,\n        10042070,\n        10042390\n    ],\n    [\n        10032013,\n        10032012\n    ],\n    [\n        10036025,\n        10037000,\n        10038056,\n        10036011,\n        10038045,\n        10036017,\n        10038000,\n        10038035\n    ],\n    [\n        10016204,\n        10016208\n    ],\n    [\n        10039128,\n        10039224,\n        10039125\n    ],\n    [\n        10014104,\n        10016793,\n        10042267,\n        10014235,\n        10016541,\n        10010000,\n        10016785,\n        10014226,\n        10016660,\n        10021014,\n        10000008,\n        10021000,\n        10014217,\n        10016777,\n        10022030,\n        10014208,\n        10000001,\n        10016769,\n        10014082,\n        10023042,\n        10014137,\n        10016442,\n        10023098,\n        10016701,\n        10042172,\n        10014270,\n        10016432,\n        10014131,\n        10014261,\n        10041000,\n        10014122,\n        10014252,\n        10016684,\n        10014113,\n        10016802,\n        10045092,\n        10014040,\n        10016474,\n        10014299,\n        10014172,\n        10023007,\n        10014289,\n        10016465,\n        10014034,\n        10014165,\n        10045015,\n        10014026,\n        10016458,\n        10014156,\n        10023116,\n        10016449,\n        10014019,\n        10014151,\n        10014279,\n        10023032,\n        10016378,\n        10016637,\n        10016753,\n        10018033,\n        10016370,\n        10041075,\n        10016627,\n        10014327,\n        10022007,\n        10016744,\n        10014314,\n        10016620,\n        10033005,\n        10041068,\n        10011247,\n        10014191,\n        10023023,\n        10014051,\n        10014179,\n        10016483,\n        10014308\n    ],\n    [\n        10016904,\n        10017048,\n        10017033,\n        10017049,\n        10017034,\n        10017041,\n        10017042,\n        10016903\n    ],\n    [\n        10015103,\n        10015106\n    ],\n    [\n        10027000,\n        10028009,\n        10027002,\n        10028026,\n        10028000,\n        10028018\n    ],\n    [\n        10029272,\n        10029263,\n        10029278,\n        10029265\n    ],\n    [\n        10024032,\n        10017073,\n        10024049,\n        10017061,\n        10017063\n    ],\n    [\n        10016589,\n        10015086,\n        10015087,\n        10016591,\n        10016597\n    ],\n    [\n        10040001,\n        10040000\n    ],\n    [\n        10011000,\n        10011016,\n        10011006\n    ],\n    [\n        10016000,\n        10016004\n    ],\n    [\n        10016920,\n        10016250,\n        10016828,\n        10016988,\n        10016349,\n        10016862,\n        10016144,\n        10018000,\n        10026000,\n        10016178,\n        10041011,\n        10016212,\n        10021044,\n        10035095,\n        10016008,\n        10016042,\n        10016395,\n        10016076,\n        10016110,\n        10016960,\n        10015041,\n        10015044\n    ],\n    [\n        10039034,\n        10039037,\n        10039164\n    ],\n    [\n        10042427,\n        10041082,\n        10042346,\n        10042442,\n        10042380,\n        10041103,\n        10042334,\n        10041105,\n        10042081,\n        10042290,\n        10042278\n    ],\n    [\n        10039172,\n        10039175\n    ],\n    [\n        10015056,\n        10035104,\n        10016259,\n        10016358\n    ],\n    [\n        10016387,\n        10016391\n    ],\n    [\n        10039000,\n        10039003,\n        10039236\n    ],\n    [\n        10035000,\n        10035002,\n        10035005,\n        10035021,\n        10035013\n    ],\n    [\n        10016072,\n        10016068\n    ],\n    [\n        10016955,\n        10016950\n    ],\n    [\n        10016552,\n        10015017,\n        10016812,\n        10015014\n    ],\n    [\n        10039144,\n        10039230,\n        10039141\n    ],\n    [\n        10023000,\n        10023016,\n        10025000,\n        10016617,\n        10014010,\n        10016762,\n        10014000,\n        10014002,\n        10016694\n    ],\n    [\n        10014072,\n        10014074\n    ],\n    [\n        10029019,\n        10015138,\n        10015140,\n        10015157,\n        10029012,\n        10015143\n    ],\n    [\n        10015033,\n        10015037\n    ],\n    [\n        10045084,\n        10045072,\n        10042453\n    ],\n    [\n        10016572,\n        10016575\n    ],\n    [\n        10015130,\n        10007008\n    ],\n    [\n        10011193,\n        10011226,\n        10011231,\n        10045104,\n        10011188,\n        10011190,\n        10045111,\n        10011223,\n        10013000,\n        10011209,\n        10011212,\n        10011180,\n        10011149,\n        10011204,\n        10011206,\n        10011143\n    ],\n    [\n        10014077,\n        10014079\n    ],\n    [\n        10020030,\n        10020033\n    ],\n    [\n        10035145,\n        10035147,\n        10035146,\n        10035148\n    ],\n    [\n        10030000,\n        10030002\n    ],\n    [\n        10039096,\n        10039211,\n        10039093\n    ],\n    [\n        10042083,\n        10042099,\n        10042114,\n        10045026,\n        10042085,\n        10046037,\n        10042101\n    ],\n    [\n        10011081,\n        10011099,\n        10011070,\n        10011089,\n        10011124\n    ],\n    [\n        10016824,\n        10016820\n    ],\n    [\n        10011160,\n        10011130,\n        10014090,\n        10014242\n    ],\n    [\n        10035033,\n        10035073,\n        10035028,\n        10035030\n    ],\n    [\n        10016106,\n        10016102\n    ],\n    [\n        10016426,\n        10016422\n    ],\n    [\n        10021032,\n        10021035\n    ],\n    [\n        10015048,\n        10015054,\n        10035102,\n        10016257,\n        10016356\n    ],\n    [\n        10011054,\n        10011060,\n        10011076,\n        10011236\n    ],\n    [\n        10016170,\n        10016174\n    ],\n    [\n        10016248,\n        10016691,\n        10016246\n    ],\n    [\n        10014067\n    ],\n    [\n        10014060,\n        10014062\n    ],\n    [\n        10033000,\n        10033002,\n        10042318\n    ],\n    [\n        10016238,\n        10016239\n    ],\n    [\n        10024026,\n        10024028,\n        10024047\n    ],\n    [\n        10035139,\n        10035140,\n        10035143,\n        10035142\n    ],\n    [\n        10011243,\n        10011234,\n        10014098,\n        10014101,\n        10016533\n    ],\n    [\n        10024041,\n        10016505,\n        10039052,\n        10016526,\n        10039055,\n        10016512,\n        10039075,\n        10039187,\n        10003013,\n        10016519\n    ],\n    [\n        10039112,\n        10039218,\n        10039109\n    ],\n    [\n        10016034,\n        10016038\n    ],\n    [\n        10016329,\n        10016331,\n        10016603,\n        10016610,\n        10016565\n    ],\n    [\n        10032009,\n        10036001,\n        10032007\n    ],\n    [\n        10003004,\n        10039006,\n        10015127\n    ]\n]"
+				}
+			]
+		},
+		{
+			"name": "create_subconfig",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{server-url}}:{{server-port}}/create_subconfig?data=%5B%22FIRST_NAME%22%2C%20%22LAST_NAME%22%5D",
+					"host": [
+						"{{server-url}}"
+					],
+					"port": "{{server-port}}",
+					"path": [
+						"create_subconfig"
+					],
+					"query": [
+						{
+							"key": "data",
+							"value": "%5B%22FIRST_NAME%22%2C%20%22LAST_NAME%22%5D"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete_subconfig",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
