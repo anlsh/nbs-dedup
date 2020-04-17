@@ -150,7 +150,9 @@ Importantly, this server is **INSECURE**. It does not implement any form of auth
 
 The Server & REST API's main purpose is to facilitate the demo UI's communication with the Deduplication API, but might be useful in the future (after being secured) if networked access to deduplication functionality is desired.
 
-The existing endpoints are all implemented in the `server` package. Documentation & example usages are provided as a [Postman](https://www.postman.com/) project in the `postman` directory.
+The existing endpoints are all implemented and documented in the `server` package. Usage might not be entirely clear just from the documentation however, so functionaly example usages/ouputs are provided as a [Postman](https://www.postman.com/) project in the `postman` directory.
+
+The arguments to in the Postman requests might look funky, which is due to their being encoded as URI components. To encode/unencode them, select the parameter value, highlight all, right click, and select the relevant "Encode/Decode URI" option.
 
 # Incomplete & Future Work
 1. [High Priority | Medium Difficulty] Currently, AuxMap files are loaded, modified, and saved every single time `hookAddRecord` and `hookRemoveRecord` are called (which is every time a record is added/removed).

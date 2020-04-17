@@ -49,6 +49,22 @@ public class DedupAPIController {
         return config_ls;
     }
 
+    /**
+     * This request provides a list of fields which a user can select to deduplicate on. This list may change over time,
+     * so instead of being hard-coded in the UI it is retrieved dynamically from the API
+     *
+     * Specification
+     * -------------
+     * A list of entries describing deduplicable fields is returned. Each entry has the following subfields
+     *
+     * -- "attr_code":  A string with a unique identifier for this attribute to be used in other REST calls
+     * -- "parent":     Describes hierarchical information relevant to how attributes which are displayed in the UI. If
+     *                  null, then the attribute is "top-level". If non-null, then it is the attr_code of the parent
+     *                  attribute. For instance, an attribute describing a first initial is logically a child of the
+     *                  first name attribute, and would thus have a "parent" value of "FIRST_NAME"
+     * -- "desc":       A string which gives a human-readable name for the attribute which will be displayed in the UI.
+     * @return          The Json array described above
+     */
     @GetMapping("get_dedup_flags")
     public String get_dedup_flags() {
 
@@ -68,6 +84,18 @@ public class DedupAPIController {
         return retObject.toString();
     }
 
+    /**
+     * Creates and caches an AuxMap tracking the given subconfig in the server's AuxMapManager.
+     *
+     * Specification
+     * -------------
+     * Takes a single parameter ("data"), specifying a subconfig. Passed as a list of attr_codes (see get_dedup_flags)
+     *
+     * # Returns
+     *
+     * @param data      A list of attr_code strings: example ["first_nm", "last_nm"]
+     * @return          true
+     */
     @PostMapping("create_subconfig")
     public Boolean create_subconfig(@RequestParam(value = "data") String data) {
 
@@ -79,6 +107,18 @@ public class DedupAPIController {
         return true;
     }
 
+    /**
+     * Deletes the AuxMap tracking the given subconfig from the server's AuxMapManager.
+     *
+     * Specification
+     * -------------
+     * Takes a single parameter ("data"), specifying a subconfig. Passed as a list of attr_codes (see get_dedup_flags)
+     *
+     * # Returns
+     *
+     * @param data      A list of attr_code strings: example ["first_nm", "last_nm"]
+     * @return          true
+     */
     @PostMapping("delete_subconfig")
     public Boolean delete_subconfig(@RequestParam(value = "data") String data) {
 
@@ -90,6 +130,28 @@ public class DedupAPIController {
         return true;
     }
 
+
+    /**
+     * Deduplicate using the config given by the "data" parameter (creating and storing corresponding AuxMaps in
+     * AuxMapManager if they don't yet exist), and return a list of record groupings. The groupings returned by this
+     * function are merged rather aggressively: see documentation for the getMatchingMerged function.
+     *
+     * Specification
+     * --------------
+     * Takes a single parameter ("data"), specifying a config. Passed as a list of  subconfigs, where each subconfig
+     * is a list of attr_codes (see get_dedup_flags)
+
+     * Returns
+     * A Json list of ID groupings, where groupings of more than one element indicate that the IDs in question have
+     * been marked as duplicates.
+     *
+     * Example return value:
+        [[104, 98, 337], [42], [1000, 800, 496, 312], ...]
+
+     * @param data
+     * @return
+     * @throws SQLException
+     */
     @GetMapping("deduplicate_merged")
     public String deduplicate(@RequestParam("data") String data) throws SQLException {
 

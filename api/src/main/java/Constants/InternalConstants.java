@@ -20,7 +20,7 @@ public class InternalConstants {
     public static final String COL_SSN = "SSN";
 
     // The file extensions to be used for cached AuxMaps
-    public static final String AUX_FILE_EXTENSION = ".aux";
+    public static final String AUX_FILE_EXTENSION = "aux";
     public static final String MANAGER_FILE_NAME = "manager.json";
 
     // Time-outs for various operations (hashing entries and maximum life of a thread in the paralellized hashing
