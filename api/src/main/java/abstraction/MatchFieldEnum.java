@@ -161,7 +161,7 @@ public enum MatchFieldEnum {
      * value of getFieldValue()
      *
      * Possibly multiple-valued attributes should be treated the same as single-valued ones. For instance, the return
-     * value for the FIRST_NAME attribute is String, even though it should be more like List<String> since people can
+     * value for the FIRST_NAME attribute is String, even though it should be more like List(String) since people can
      * have multiple names
      * @return
      */

@@ -66,7 +66,7 @@ public class SQLQueryUtils {
      * Unfortunately Java lacks list comprehensions, so the implementation is rather long (though not complicated). The
      * function is probably best understood by example.
      *
-     * For example, getSQLQueryForEntries({first_nm, ssn}, 123) =>
+     * For example, getSQLQueryForEntries({first_nm, ssn}, 123) returns
      *   "SELECT    Person_name.person_uid as Person_name__person_uid,
      *              Person_name.first_nm as Person_name__first_nm,
      *              Person.person_uid as Person__person_uid,
