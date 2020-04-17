@@ -55,6 +55,12 @@ public enum MatchFieldEnum {
         @Override public Class getFieldType() { return String.class; }
         @Override public String getTableName() {return "Person"; }
         @Override public String[] getRequiredColumnsArray() { return SSN.getRequiredColumnsArray(); }
+    },
+    RACE {
+        @Override public String getHumanReadableName() { return "Race"; }
+        @Override public Class getFieldType() { return String.class; }
+        @Override public String getTableName() { return "Person_race"; }
+        @Override public String[] getRequiredColumnsArray() { return new String[]{"race_cd"}; }
     };
 
     /** Should return true for fields which it makes sense to deduplicate on (almost all of them) and false

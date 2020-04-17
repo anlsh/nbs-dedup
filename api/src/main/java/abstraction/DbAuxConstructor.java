@@ -86,7 +86,6 @@ public class DbAuxConstructor {
         // Is unused when num_threads == 1, but must be initialized anyways
         ExecutorService executor = new BlockingThreadPool(num_threads, Config.fetch_size);
 
-
         // Loop over the items in the ResultSet, hashing them immediately or concurrently
         try {
             while (rs.next()) {
