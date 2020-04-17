@@ -161,7 +161,9 @@ The arguments to in the Postman requests might look funky, which is due to their
 
    The current implementation works for databases which are rarely modified, but the faster version will need to be implemented for realistic databases.
 
-2. [High Priority | Low Difficulty] Not all of the requested match fields are implemented in `MatchFieldEnum.java` right now. This means that the codebase isn't set up to deduplicate based on email, among other things.
+2. [High Priority | Medium Difficult] As discussed in our last meeting, our API composes attributes from different tables incorrectly. This behavior is controlled through the `getSQLQueryForEntries` function in `SQLQueryUtils.java`. The column aliasing logic, which comprises the first half of the method, should be fine: but the second half, which controls how tables are joined together, should be updated to implement the correct kind of table join.
+
+3. [Medium Priority | Low Difficulty] Not all of the requested match fields are implemented in `MatchFieldEnum.java` right now. This means that the codebase isn't set up to deduplicate based on email, among other things.
 Fortunately, this is only a matter of writing some easy boilerplate code in `MatchFieldEnum.java`: the API is intended to be extended in this way. The already-implemented Match Fields should provide ample example of how to do so.
 
 # Authors
