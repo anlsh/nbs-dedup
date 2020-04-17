@@ -8,9 +8,6 @@ import com.google.common.hash.Hashing;
  * should be rare). Reasonable defaults are provided EXCEPT for the auxmap storage directory, which should be placed
  * somewhere other than /tmp/
  *
- * TODO As these constants are meant to be configurable, they should ideally be loaded from a .conf file or something
- * similar. Otherwise the project code has to be recompiled before changes are reflected.
- *
  * TODO Move AUX_DATA_ROOT to a preferred location not in /tmp/
  */
 public class Config {
