@@ -1,14 +1,40 @@
+
 # NBS Deduplication API
 This is repository for patient deduplication in NBS produced by Georgia Tech capstone team 9345.
 
+# Release Notes [v0.8]
+
+### Features
+* Configurable patient matching using hashing-based algorithm
+* Aux map manager which efficiently caches AuxMaps on local storage instead of constantly re-hashing
+* Gradle tasks to automatically generate API .jar file, documentation, tests, & more.
+* And more! (Details given in sections below)
+
+### Bugs
+* When the first and name attributes in `MatchFieldEnum.java` are set to rely on the "Person" table instead of the "Person_name" table, some of the tests fail with an `SQLError: Column Person.first_nm does not exist` even though the column does in fact, exist within the database. We believe that this will be fixed once the appropriate SQL query is implemented (see item 1 of "Future Work")
+* The current SQL query in `SQLQueryUtils.java` which is used to retrieve records from the database always retrieves the`Person.person_uid` column, even when this column is unnecessary to the actual requested configuration
+
+
+### Future Work
+1. [High Priority | Medium Difficulty] Currently, AuxMap files are loaded, modified, and saved every single time `hookAddRecord` and `hookRemoveRecord` are called (which is every time a record is added/removed).
+
+   However file operations are expensive, and using SQL queries to retrieve single records is also inefficient. Instead, the hooks should modify a job queue of things to add & delete, which would be flushed every time the `getAuxMap` function was called or the Java process was shut down.
+
+   The current implementation works for databases which are rarely modified, but the faster version will need to be implemented for realistic databases.
+
+2. [High Priority | Medium Difficult] As discussed in our last meeting, our API composes attributes from different tables incorrectly. This behavior is controlled through the `getSQLQueryForEntries` function in `SQLQueryUtils.java`. The column aliasing logic, which comprises the first half of the method, should be fine: but the second half, which controls how tables are joined together, should be updated to implement the correct kind of table join.
+
+3. [Medium Priority | Low Difficulty] Not all of the requested match fields are implemented in `MatchFieldEnum.java` right now. This means that the codebase isn't set up to deduplicate based on email, among other things.
+Fortunately, this is only a matter of writing some easy boilerplate code in `MatchFieldEnum.java`: the API is intended to be extended in this way. The already-implemented Match Fields should provide ample example of how to do so.
+
 
 # Installation
-The only dependencies which need to be manually installed are
+The only requirements which need to be manually installed are
 * Java (Version 8+)
 * [Gradle](https://gradle.org/)
 * [Node.js](https://nodejs.org/en/)
 
-Gradle and npm (which is bundled with node.js) will take care of installing other dependencies.
+Gradle and npm (which is bundled with node.js) will automatically install all other dependencies.
 
 To verify that you can build the API and UI correctly
 * run `gradle build` from the `api` folder
@@ -26,6 +52,8 @@ To start the Demo UI
 The back-end API is the largest component of the project, and is what would ultimately be integrated into the NBS. It includes functions meant to accessed through pure Java and  a limited REST api which can be used to access some of the API's functionality. What follows is a broad description of the API's functionality and the most relevant technical components.
 
 **Note**: If you are trying to open the Java project in an IDE, open the `dedup/api` folder specifically: not the `dedup` folder
+
+A jar file for the API can be built using the `gradle jar` command: `gradle tasks` also lists several useful commands, the most relevant of which are described below.
 
 ## Code Documentation
 Almost every function in the codebase is annotated with comments and JavaDoc'd, and human-readable documentation can be generated in HTML format using the `gradle javadoc` command
@@ -154,17 +182,6 @@ The existing endpoints are all implemented and documented in the `server` packag
 
 The arguments to in the Postman requests might look funky, which is due to their being encoded as URI components. To encode/unencode them, select the parameter value, highlight all, right click, and select the relevant "Encode/Decode URI" option.
 
-# Incomplete & Future Work
-1. [High Priority | Medium Difficulty] Currently, AuxMap files are loaded, modified, and saved every single time `hookAddRecord` and `hookRemoveRecord` are called (which is every time a record is added/removed).
-
-   However file operations are expensive, and using SQL queries to retrieve single records is also inefficient. Instead, the hooks should modify a job queue of things to add & delete, which would be flushed every time the `getAuxMap` function was called or the Java process was shut down.
-
-   The current implementation works for databases which are rarely modified, but the faster version will need to be implemented for realistic databases.
-
-2. [High Priority | Medium Difficult] As discussed in our last meeting, our API composes attributes from different tables incorrectly. This behavior is controlled through the `getSQLQueryForEntries` function in `SQLQueryUtils.java`. The column aliasing logic, which comprises the first half of the method, should be fine: but the second half, which controls how tables are joined together, should be updated to implement the correct kind of table join.
-
-3. [Medium Priority | Low Difficulty] Not all of the requested match fields are implemented in `MatchFieldEnum.java` right now. This means that the codebase isn't set up to deduplicate based on email, among other things.
-Fortunately, this is only a matter of writing some easy boilerplate code in `MatchFieldEnum.java`: the API is intended to be extended in this way. The already-implemented Match Fields should provide ample example of how to do so.
 
 # Authors
 - Daniel Finkelstein
